@@ -26,7 +26,7 @@ def train_model(data_dir, epochs=50, imgsz=224, batch=16, project="clean_prey_yo
             cache=False
         )
         print("✅ Training complete!")
-        print("Best model saved at:", results.best)
+        print(f"Results and weights saved in the '{project}' directory.")
         
     except Exception as e:
         print(f"❌ Training failed with error: {e}")

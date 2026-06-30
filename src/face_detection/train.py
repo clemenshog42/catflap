@@ -21,7 +21,7 @@ def train_model(data_yaml, epochs=100, imgsz=640, batch=16, project="yolov11_cat
             plots=True,
         )
         print("✅ Training complete!")
-        print("Best model saved at:", results.best)
+        print(f"Results and weights saved in the '{project}' directory.")
         
     except Exception as e:
         print(f"❌ Training failed with error: {e}")
