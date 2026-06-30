@@ -32,7 +32,7 @@ def main(video_path, save_uncertain_dir=None):
     # Initialize pipeline with placeholder model paths
     pipeline = CatFlapPipeline(
         detector_path="models/face_gray_float16.tflite",
-        classifier_path="models/best_prey_30_06_V1_openvino_model"
+        classifier_path="models/best_prey_30_06_V2_openvino_model"
     )
     
     # Initialize state machine
@@ -62,6 +62,9 @@ def main(video_path, save_uncertain_dir=None):
             
         frame_idx += 1
         
+        # Save a clean copy of the frame before any bounding boxes are drawn on it
+        pristine_frame = frame.copy()
+        
         # 1 & 2. Run Object Detection and Tracking (ByteTrack)
         results = pipeline.run_detector(frame)
         
@@ -77,11 +80,11 @@ def main(video_path, save_uncertain_dir=None):
                 current_state = state_machine.update(track_id, prey_confidence, frame_idx)
                 
                 # Hard Negative Mining: Save uncertain frames
-                if save_uncertain_dir and 0.4 <= prey_confidence <= 0.6:
+                if save_uncertain_dir and 0.15 <= prey_confidence <= 0.6:
                     # Save max 1 frame per second per track (assuming 30fps) to avoid spam
                     if track_id not in last_saved_frame or (frame_idx - last_saved_frame[track_id]) > 30:
                         filename = os.path.join(save_uncertain_dir, f"uncertain_id{track_id}_f{frame_idx}_conf{prey_confidence:.2f}.jpg")
-                        cv2.imwrite(filename, frame)
+                        cv2.imwrite(filename, pristine_frame)
                         last_saved_frame[track_id] = frame_idx
                 
                 # Draw results on frame
