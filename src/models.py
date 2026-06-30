@@ -71,7 +71,7 @@ class CatFlapPipeline:
         # Add asymmetrical padding (heavy on bottom for dangling prey)
         pad_w = 15
         pad_top = 10
-        pad_bottom = 50
+        pad_bottom = 30
         x1 -= pad_w
         y1 -= pad_top
         x2 += pad_w
