@@ -63,6 +63,14 @@ class CatFlapPipeline:
             
         x1, y1, x2, y2 = map(int, box)
         
+        # Add padding (should match what was used during training, e.g. 10 pixels)
+        pad_w = 10
+        pad_h = 10
+        x1 -= pad_w
+        y1 -= pad_h
+        x2 += pad_w
+        y2 += pad_h
+        
         # Ensure coordinates are within frame bounds
         h, w = frame.shape[:2]
         x1, y1 = max(0, x1), max(0, y1)
