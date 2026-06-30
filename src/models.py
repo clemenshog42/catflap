@@ -11,11 +11,12 @@ except ImportError:
 from ultralytics import YOLO
 
 class CatFlapPipeline:
-    def __init__(self, detector_path="path/to/cat_face_detector.pt", classifier_path="path/to/prey_classifier.pt"):
+    def __init__(self, detector_path="path/to/cat_face_detector.pt", classifier_path="path/to/prey_classifier.pt", apply_clahe=True):
         """
         Initializes the YOLO models.
         Currently using placeholders. Replace with actual paths when ready.
         """
+        self.apply_clahe = apply_clahe
         print(f"Loading Object Detector from: {detector_path}")
         try:
             self.detector = YOLO(detector_path, task='detect')
@@ -41,6 +42,10 @@ class CatFlapPipeline:
         # Convert to grayscale as the model name suggests it expects 1-channel input
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
+        if self.apply_clahe:
+            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+            gray_frame = clahe.apply(gray_frame)
+        
         # persist=True enables tracking across frames
         # tracker="bytetrack.yaml" uses the ByteTrack algorithm built into Ultralytics
         try:
@@ -64,8 +69,8 @@ class CatFlapPipeline:
         x1, y1, x2, y2 = map(int, box)
         
         # Add padding (should match what was used during training, e.g. 10 pixels)
-        pad_w = 10
-        pad_h = 10
+        pad_w = 15
+        pad_h = 50
         x1 -= pad_w
         y1 -= pad_h
         x2 += pad_w
@@ -82,8 +87,13 @@ class CatFlapPipeline:
         if crop.size == 0:
             return 0.0
             
-        # Convert crop to grayscale, then back to 3-channel (g, g, g) as per training
+        # Convert crop to grayscale, apply optional CLAHE, then back to 3-channel (g, g, g) as per training
         gray_crop = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+        
+        if self.apply_clahe:
+            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+            gray_crop = clahe.apply(gray_crop)
+            
         gray_3ch_crop = cv2.cvtColor(gray_crop, cv2.COLOR_GRAY2BGR)
             
         # Run classifier on the crop
