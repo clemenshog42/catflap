@@ -62,45 +62,49 @@ def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=15
             # Perform cropping
             results = crop_model(str(f), verbose=False)[0]
             if len(results.boxes) > 0:
-                box = results.boxes.xyxy[0].cpu().numpy()
-                x1, y1, x2, y2 = map(int, box)
-                
-                h, w = img.shape[:2]
-                
-                # Add asymmetrical padding (heavy on bottom for dangling prey)
-                x1_pad = max(0, x1 - pad_w)
-                y1_pad = max(0, y1 - pad_top)
-                x2_pad = min(w, x2 + pad_w)
-                y2_pad = min(h, y2 + pad_bottom)
-                
-                img = img[y1_pad:y2_pad, x1_pad:x2_pad]
+                for box_idx, box in enumerate(results.boxes.xyxy.cpu().numpy()):
+                    x1, y1, x2, y2 = map(int, box)
+                    
+                    h, w = img.shape[:2]
+                    
+                    # Add asymmetrical padding (heavy on bottom for dangling prey)
+                    x1_pad = max(0, x1 - pad_w)
+                    y1_pad = max(0, y1 - pad_top)
+                    x2_pad = min(w, x2 + pad_w)
+                    y2_pad = min(h, y2 + pad_bottom)
+                    
+                    # Create the crop on a fresh copy so we don't destroy the original image for the next loop
+                    crop_img = img[y1_pad:y2_pad, x1_pad:x2_pad].copy()
+                    
+                    # Handle color mode and optional CLAHE
+                    if color_mode == "grayscale":
+                        crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+                        if apply_clahe:
+                            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+                            crop_img = clahe.apply(crop_img)
+                        # Duplicate channels to make it 3-channel for pretrained models
+                        crop_img = cv2.cvtColor(crop_img, cv2.COLOR_GRAY2BGR)
+                    else:
+                        if apply_clahe:
+                            lab = cv2.cvtColor(crop_img, cv2.COLOR_BGR2LAB)
+                            l, a, b = cv2.split(lab)
+                            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+                            cl = clahe.apply(l)
+                            limg = cv2.merge((cl,a,b))
+                            crop_img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+
+                    # Determine split
+                    dst_dir = val_dir / cls if i < val_count else train_dir / cls
+                    
+                    # Append _cat0, _cat1, etc. to the filename to avoid overwriting if there are multiple cats
+                    filename = f"{f.stem}_cat{box_idx}{f.suffix}"
+                    dst_path = dst_dir / filename
+                    
+                    cv2.imwrite(str(dst_path), crop_img)
+                    total_processed += 1
             else:
                 # If the face detector misses, we skip the image to ensure the classifier only sees cropped faces
                 continue
-            
-            # Handle color mode and optional CLAHE
-            if color_mode == "grayscale":
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                if apply_clahe:
-                    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-                    img = clahe.apply(img)
-                # Duplicate channels to make it 3-channel for pretrained models
-                img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-            else:
-                if apply_clahe:
-                    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-                    l, a, b = cv2.split(lab)
-                    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-                    cl = clahe.apply(l)
-                    limg = cv2.merge((cl,a,b))
-                    img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
-
-            # Determine split
-            dst_dir = val_dir / cls if i < val_count else train_dir / cls
-            dst_path = dst_dir / f.name
-            
-            cv2.imwrite(str(dst_path), img)
-            total_processed += 1
 
     print(f"✅ Processed and cropped {total_processed} images into train/val folders")
     
