@@ -15,7 +15,7 @@ def to_yolo_bbox(x1, y1, x2, y2, img_w, img_h):
     h = abs(y2 - y1) / img_h
     return x_center, y_center, w, h
 
-def build_dataset(input_dir, output_dir, source, model_path=None, color_mode="rgb", splits=(0.8, 0.1, 0.1), class_id=0, class_name="cat_face"):
+def build_dataset(input_dir, output_dir, source, model_path=None, color_mode="rgb", apply_clahe=False, splits=(0.8, 0.1, 0.1), class_id=0, class_name="cat_face"):
     # Create directories
     for split in ["train", "val", "test"]:
         os.makedirs(os.path.join(output_dir, split, "images"), exist_ok=True)
@@ -68,9 +68,21 @@ def build_dataset(input_dir, output_dir, source, model_path=None, color_mode="rg
             
             h, w = img.shape[:2]
             
-            # Grayscale conversion
+            # Grayscale conversion and optional CLAHE
             if color_mode == "grayscale":
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                if apply_clahe:
+                    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+                    img = clahe.apply(img)
+            else:
+                if apply_clahe:
+                    # Apply CLAHE to the L channel in LAB color space
+                    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+                    l, a, b = cv2.split(lab)
+                    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+                    cl = clahe.apply(l)
+                    limg = cv2.merge((cl,a,b))
+                    img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
             
             x_c, y_c, bw, bh = None, None, None, None
             
@@ -132,6 +144,7 @@ if __name__ == "__main__":
     parser.add_argument("--source", choices=["annotation", "model"], required=True, help="Source of annotations")
     parser.add_argument("--model_path", help="Path to YOLO model if source is 'model'")
     parser.add_argument("--color", choices=["rgb", "grayscale"], default="rgb", help="Color mode")
+    parser.add_argument("--apply_clahe", action="store_true", help="Apply Contrast Limited Adaptive Histogram Equalization (CLAHE)")
     
     args = parser.parse_args()
-    build_dataset(args.input_dir, args.output_dir, args.source, args.model_path, args.color)
+    build_dataset(args.input_dir, args.output_dir, args.source, args.model_path, args.color, args.apply_clahe)

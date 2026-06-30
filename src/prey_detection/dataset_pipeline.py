@@ -9,7 +9,7 @@ from pathlib import Path
 from tqdm import tqdm
 from ultralytics import YOLO
 
-def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=10, pad_h=10, color_mode="rgb", val_ratio=0.2, seed=42):
+def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=10, pad_h=10, color_mode="rgb", apply_clahe=False, val_ratio=0.2, seed=42):
     random.seed(seed)
     
     prey_path = Path(prey_dir)
@@ -78,11 +78,22 @@ def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=10
                 # If the face detector misses, we skip the image to ensure the classifier only sees cropped faces
                 continue
             
-            # Handle color mode
+            # Handle color mode and optional CLAHE
             if color_mode == "grayscale":
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                if apply_clahe:
+                    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+                    img = clahe.apply(img)
                 # Duplicate channels to make it 3-channel for pretrained models
                 img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+            else:
+                if apply_clahe:
+                    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+                    l, a, b = cv2.split(lab)
+                    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+                    cl = clahe.apply(l)
+                    limg = cv2.merge((cl,a,b))
+                    img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
 
             # Determine split
             dst_dir = val_dir / cls if i < val_count else train_dir / cls
@@ -116,6 +127,7 @@ if __name__ == "__main__":
     parser.add_argument("--pad_w", type=int, default=10, help="Horizontal padding (pixels) around the bounding box")
     parser.add_argument("--pad_h", type=int, default=10, help="Vertical padding (pixels) around the bounding box")
     parser.add_argument("--color", choices=["rgb", "grayscale"], default="rgb", help="Color mode (grayscale will duplicate channels to 3)")
+    parser.add_argument("--apply_clahe", action="store_true", help="Apply Contrast Limited Adaptive Histogram Equalization (CLAHE)")
     
     args = parser.parse_args()
-    process_and_split(args.prey_dir, args.clean_dir, args.output_dir, args.crop_model_path, args.pad_w, args.pad_h, args.color)
+    process_and_split(args.prey_dir, args.clean_dir, args.output_dir, args.crop_model_path, args.pad_w, args.pad_h, args.color, args.apply_clahe)

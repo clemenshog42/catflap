@@ -21,6 +21,7 @@ def train_model(data_dir, epochs=50, imgsz=224, batch=16, project="clean_prey_yo
             lrf=0.01,
             optimizer="Adam",
             augment=True,
+            hsv_v=0.5, # Boost brightness augmentation for dark features
             project=project,
             name="train",
             cache=False

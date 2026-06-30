@@ -14,9 +14,11 @@ def train_model(data_yaml, epochs=100, imgsz=640, batch=16, project="yolov11_cat
             epochs=epochs,
             imgsz=imgsz,
             batch=batch,
-            name=project,
             device=device,
-            patience=40,
+            patience=10,
+            hsv_v=0.5, # Boost brightness augmentation for dark features
+            project=project,
+            name="train",
             save=True,
             plots=True,
         )
