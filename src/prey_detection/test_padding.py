@@ -16,8 +16,8 @@ def test_padding(input_dir, output_dir, crop_model_path, pad_w=10, pad_h=10, num
         raise ValueError("crop_model_path must be provided to test padding")
     crop_model = YOLO(crop_model_path)
     
-    # Get all valid files
-    files = [f for f in input_path.iterdir() if f.is_file() and f.suffix.lower() in ['.jpg', '.jpeg', '.png']]
+    # Get all valid files recursively
+    files = [f for f in input_path.rglob('*') if f.is_file() and f.suffix.lower() in ['.jpg', '.jpeg', '.png']]
     
     if not files:
         print(f"No images found in {input_dir}")

@@ -28,9 +28,9 @@ def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=10
         raise ValueError("crop_model_path must be provided to crop the images")
     crop_model = YOLO(crop_model_path)
     
-    # Get all valid files
-    prey_files = [f for f in prey_path.iterdir() if f.is_file() and f.suffix.lower() in ['.jpg', '.jpeg', '.png']]
-    clean_files = [f for f in clean_path.iterdir() if f.is_file() and f.suffix.lower() in ['.jpg', '.jpeg', '.png']]
+    # Get all valid files recursively
+    prey_files = [f for f in prey_path.rglob('*') if f.is_file() and f.suffix.lower() in ['.jpg', '.jpeg', '.png']]
+    clean_files = [f for f in clean_path.rglob('*') if f.is_file() and f.suffix.lower() in ['.jpg', '.jpeg', '.png']]
     
     # Balance classes: Take all prey images, and sample an equal amount of clean images
     num_prey = len(prey_files)
