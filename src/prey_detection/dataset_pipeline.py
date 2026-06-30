@@ -9,7 +9,7 @@ from pathlib import Path
 from tqdm import tqdm
 from ultralytics import YOLO
 
-def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=10, pad_h=10, color_mode="rgb", apply_clahe=False, val_ratio=0.2, seed=42):
+def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=15, pad_top=10, pad_bottom=50, color_mode="rgb", apply_clahe=False, val_ratio=0.2, seed=42):
     random.seed(seed)
     
     prey_path = Path(prey_dir)
@@ -67,13 +67,13 @@ def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=10
                 
                 h, w = img.shape[:2]
                 
-                # Add padding
-                x1 = max(0, x1 - pad_w)
-                y1 = max(0, y1 - pad_h)
-                x2 = min(w, x2 + pad_w)
-                y2 = min(h, y2 + pad_h)
+                # Add asymmetrical padding (heavy on bottom for dangling prey)
+                x1_pad = max(0, x1 - pad_w)
+                y1_pad = max(0, y1 - pad_top)
+                x2_pad = min(w, x2 + pad_w)
+                y2_pad = min(h, y2 + pad_bottom)
                 
-                img = img[y1:y2, x1:x2]
+                img = img[y1_pad:y2_pad, x1_pad:x2_pad]
             else:
                 # If the face detector misses, we skip the image to ensure the classifier only sees cropped faces
                 continue
@@ -125,9 +125,10 @@ if __name__ == "__main__":
     parser.add_argument("--output_dir", required=True, help="Output directory for train/val splits")
     parser.add_argument("--crop_model_path", required=True, help="Path to YOLO cat face model for cropping")
     parser.add_argument("--pad_w", type=int, default=10, help="Horizontal padding (pixels) around the bounding box")
-    parser.add_argument("--pad_h", type=int, default=10, help="Vertical padding (pixels) around the bounding box")
+    parser.add_argument("--pad_top", type=int, default=10, help="Vertical padding (pixels) above the bounding box")
+    parser.add_argument("--pad_bottom", type=int, default=30, help="Vertical padding (pixels) below the bounding box (for prey)")
     parser.add_argument("--color", choices=["rgb", "grayscale"], default="rgb", help="Color mode (grayscale will duplicate channels to 3)")
     parser.add_argument("--apply_clahe", action="store_true", help="Apply Contrast Limited Adaptive Histogram Equalization (CLAHE)")
     
     args = parser.parse_args()
-    process_and_split(args.prey_dir, args.clean_dir, args.output_dir, args.crop_model_path, args.pad_w, args.pad_h, args.color, args.apply_clahe)
+    process_and_split(args.prey_dir, args.clean_dir, args.output_dir, args.crop_model_path, args.pad_w, args.pad_top, args.pad_bottom, args.color, args.apply_clahe)

@@ -5,7 +5,7 @@ import random
 from pathlib import Path
 from ultralytics import YOLO
 
-def test_padding(input_dir, output_dir, crop_model_path, pad_w=10, pad_h=10, num_samples=10, seed=42):
+def test_padding(input_dir, output_dir, crop_model_path, pad_w=10, pad_top=10, pad_bottom=30, num_samples=10, seed=42):
     random.seed(seed)
     
     input_path = Path(input_dir)
@@ -45,9 +45,9 @@ def test_padding(input_dir, output_dir, crop_model_path, pad_w=10, pad_h=10, num
             
             # Add padding
             x1_pad = max(0, x1 - pad_w)
-            y1_pad = max(0, y1 - pad_h)
+            y1_pad = max(0, y1 - pad_top)
             x2_pad = min(w, x2 + pad_w)
-            y2_pad = min(h, y2 + pad_h)
+            y2_pad = min(h, y2 + pad_bottom)
             
             # Padded box in GREEN
             cv2.rectangle(img_drawn, (x1_pad, y1_pad), (x2_pad, y2_pad), (0, 255, 0), 2)
@@ -70,8 +70,9 @@ if __name__ == "__main__":
     parser.add_argument("--output_dir", required=True, help="Output directory for test visualizations")
     parser.add_argument("--crop_model_path", required=True, help="Path to YOLO cat face model")
     parser.add_argument("--pad_w", type=int, default=10, help="Horizontal padding (pixels) to test")
-    parser.add_argument("--pad_h", type=int, default=10, help="Vertical padding (pixels) to test")
+    parser.add_argument("--pad_top", type=int, default=10, help="Vertical padding above face to test")
+    parser.add_argument("--pad_bottom", type=int, default=30, help="Vertical padding below face to test")
     parser.add_argument("--num_samples", type=int, default=10, help="Number of random samples to test")
     
     args = parser.parse_args()
-    test_padding(args.input_dir, args.output_dir, args.crop_model_path, args.pad_w, args.pad_h, args.num_samples)
+    test_padding(args.input_dir, args.output_dir, args.crop_model_path, args.pad_w, args.pad_top, args.pad_bottom, args.num_samples)

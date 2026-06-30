@@ -68,13 +68,14 @@ class CatFlapPipeline:
             
         x1, y1, x2, y2 = map(int, box)
         
-        # Add padding (should match what was used during training, e.g. 10 pixels)
+        # Add asymmetrical padding (heavy on bottom for dangling prey)
         pad_w = 15
-        pad_h = 50
+        pad_top = 10
+        pad_bottom = 50
         x1 -= pad_w
-        y1 -= pad_h
+        y1 -= pad_top
         x2 += pad_w
-        y2 += pad_h
+        y2 += pad_bottom
         
         # Ensure coordinates are within frame bounds
         h, w = frame.shape[:2]
