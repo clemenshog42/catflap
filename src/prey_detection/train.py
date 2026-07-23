@@ -20,8 +20,13 @@ def train_model(data_dir, epochs=50, imgsz=224, batch=16, project="clean_prey_yo
             lr0=0.01,
             lrf=0.01,
             optimizer="Adam",
-            augment=True,
-            hsv_v=0.5, # Boost brightness augmentation for dark features
+            # Safe Cherry-picked Augmentations
+            fliplr=0.5,     # Safe: horizontally flip 50% of the time
+            degrees=10.0,   # Safe: slight rotation to mimic head tilt
+            scale=0.0,      # Crucial: NO zooming/cropping. Keeps prey in frame.
+            hsv_h=0.0,      # Safe: NO hue shift
+            hsv_s=0.0,      # Safe: NO saturation shift
+            hsv_v=0.0,      # Crucial: NO brightness dropping (prevents pitch black)
             project=project,
             name="train",
             cache=False
