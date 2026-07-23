@@ -32,84 +32,115 @@ def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=15
     prey_files = [f for f in prey_path.rglob('*') if f.is_file() and f.suffix.lower() in ['.jpg', '.jpeg', '.png']]
     clean_files = [f for f in clean_path.rglob('*') if f.is_file() and f.suffix.lower() in ['.jpg', '.jpeg', '.png']]
     
-    # Balance classes: Take all prey images, and sample an equal amount of clean images
-    num_prey = len(prey_files)
-    print(f"Found {num_prey} prey images.")
-    
-    if len(clean_files) < num_prey:
-        print(f"⚠️ Warning: Found {len(clean_files)} clean images, which is less than the {num_prey} prey images. Using all clean images.")
-        sampled_clean = clean_files
-    else:
-        print(f"Found {len(clean_files)} clean images. Sampling exactly {num_prey} to balance the dataset.")
-        sampled_clean = random.sample(clean_files, num_prey)
-
-    datasets = {
-        "prey": prey_files,
-        "clean": sampled_clean
-    }
+    # We will balance the dataset by counting SUCCESSFUL face crops, not raw input files.
     
     total_processed = 0
+    successful_prey_count = 0
+    successful_clean_count = 0
     
-    for cls, files in datasets.items():
-        random.shuffle(files)
-        val_count = max(1, int(len(files) * val_ratio)) if len(files) > 1 else 0
-        
-        for i, f in enumerate(tqdm(files, desc=f"Processing {cls}")):
-            img = cv2.imread(str(f))
-            if img is None:
-                continue
+    # --- PHASE 1: Process Prey ---
+    print(f"Found {len(prey_files)} raw prey images. Processing...")
+    for f in tqdm(prey_files, desc="Processing prey"):
+        img = cv2.imread(str(f))
+        if img is None:
+            continue
+            
+        results = crop_model(str(f), verbose=False)[0]
+        if len(results.boxes) > 0:
+            for box_idx, box in enumerate(results.boxes.xyxy.cpu().numpy()):
+                x1, y1, x2, y2 = map(int, box)
+                h, w = img.shape[:2]
                 
-            # Perform cropping
-            results = crop_model(str(f), verbose=False)[0]
-            if len(results.boxes) > 0:
-                for box_idx, box in enumerate(results.boxes.xyxy.cpu().numpy()):
-                    x1, y1, x2, y2 = map(int, box)
-                    
-                    h, w = img.shape[:2]
-                    
-                    # Add asymmetrical padding (heavy on bottom for dangling prey)
-                    x1_pad = max(0, x1 - pad_w)
-                    y1_pad = max(0, y1 - pad_top)
-                    x2_pad = min(w, x2 + pad_w)
-                    y2_pad = min(h, y2 + pad_bottom)
-                    
-                    # Ensure negative padding doesn't invert the crop
-                    y1_pad = min(y2_pad - 1, y1_pad)
-                    
-                    # Create the crop on a fresh copy so we don't destroy the original image for the next loop
-                    crop_img = img[y1_pad:y2_pad, x1_pad:x2_pad].copy()
-                    
-                    # Handle color mode and optional CLAHE
-                    if color_mode == "grayscale":
-                        crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
-                        if apply_clahe:
-                            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-                            crop_img = clahe.apply(crop_img)
-                        # Duplicate channels to make it 3-channel for pretrained models
-                        crop_img = cv2.cvtColor(crop_img, cv2.COLOR_GRAY2BGR)
-                    else:
-                        if apply_clahe:
-                            lab = cv2.cvtColor(crop_img, cv2.COLOR_BGR2LAB)
-                            l, a, b = cv2.split(lab)
-                            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-                            cl = clahe.apply(l)
-                            limg = cv2.merge((cl,a,b))
-                            crop_img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+                # Add padding
+                x1_pad = max(0, x1 - pad_w)
+                y1_pad = max(0, y1 - pad_top)
+                x2_pad = min(w, x2 + pad_w)
+                y2_pad = min(h, y2 + pad_bottom)
+                y1_pad = min(y2_pad - 1, y1_pad)
+                
+                crop_img = img[y1_pad:y2_pad, x1_pad:x2_pad].copy()
+                
+                # Colors/CLAHE
+                if color_mode == "grayscale":
+                    crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+                    if apply_clahe:
+                        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+                        crop_img = clahe.apply(crop_img)
+                    crop_img = cv2.cvtColor(crop_img, cv2.COLOR_GRAY2BGR)
+                else:
+                    if apply_clahe:
+                        lab = cv2.cvtColor(crop_img, cv2.COLOR_BGR2LAB)
+                        l, a, b = cv2.split(lab)
+                        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+                        cl = clahe.apply(l)
+                        limg = cv2.merge((cl,a,b))
+                        crop_img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
 
-                    # Determine split
-                    dst_dir = val_dir / cls if i < val_count else train_dir / cls
+                # Train/Val Split via probability
+                dst_dir = val_dir / "prey" if random.random() < val_ratio else train_dir / "prey"
+                filename = f"{f.stem}_cat{box_idx}{f.suffix}"
+                cv2.imwrite(str(dst_dir / filename), crop_img)
+                
+                successful_prey_count += 1
+                total_processed += 1
+    
+    print(f"Successfully generated {successful_prey_count} prey crops.")
+    
+    # --- PHASE 2: Process Clean (until balanced) ---
+    print(f"Found {len(clean_files)} raw clean images. Sampling until we reach {successful_prey_count} successful crops...")
+    random.shuffle(clean_files)
+    
+    for f in tqdm(clean_files, desc="Processing clean"):
+        if successful_clean_count >= successful_prey_count:
+            break # We have perfectly balanced the dataset!
+            
+        img = cv2.imread(str(f))
+        if img is None:
+            continue
+            
+        results = crop_model(str(f), verbose=False)[0]
+        if len(results.boxes) > 0:
+            for box_idx, box in enumerate(results.boxes.xyxy.cpu().numpy()):
+                if successful_clean_count >= successful_prey_count:
+                    break # Stop even if there are multiple cats in this final image
                     
-                    # Append _cat0, _cat1, etc. to the filename to avoid overwriting if there are multiple cats
-                    filename = f"{f.stem}_cat{box_idx}{f.suffix}"
-                    dst_path = dst_dir / filename
-                    
-                    cv2.imwrite(str(dst_path), crop_img)
-                    total_processed += 1
-            else:
-                # If the face detector misses, we skip the image to ensure the classifier only sees cropped faces
-                continue
+                x1, y1, x2, y2 = map(int, box)
+                h, w = img.shape[:2]
+                
+                # Add padding
+                x1_pad = max(0, x1 - pad_w)
+                y1_pad = max(0, y1 - pad_top)
+                x2_pad = min(w, x2 + pad_w)
+                y2_pad = min(h, y2 + pad_bottom)
+                y1_pad = min(y2_pad - 1, y1_pad)
+                
+                crop_img = img[y1_pad:y2_pad, x1_pad:x2_pad].copy()
+                
+                # Colors/CLAHE
+                if color_mode == "grayscale":
+                    crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+                    if apply_clahe:
+                        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+                        crop_img = clahe.apply(crop_img)
+                    crop_img = cv2.cvtColor(crop_img, cv2.COLOR_GRAY2BGR)
+                else:
+                    if apply_clahe:
+                        lab = cv2.cvtColor(crop_img, cv2.COLOR_BGR2LAB)
+                        l, a, b = cv2.split(lab)
+                        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+                        cl = clahe.apply(l)
+                        limg = cv2.merge((cl,a,b))
+                        crop_img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
 
-    print(f"✅ Processed and cropped {total_processed} images into train/val folders")
+                # Train/Val Split via probability
+                dst_dir = val_dir / "clean" if random.random() < val_ratio else train_dir / "clean"
+                filename = f"{f.stem}_cat{box_idx}{f.suffix}"
+                cv2.imwrite(str(dst_dir / filename), crop_img)
+                
+                successful_clean_count += 1
+                total_processed += 1
+
+    print(f"✅ Processed and cropped {total_processed} images into train/val folders (Prey: {successful_prey_count}, Clean: {successful_clean_count})")
     
     # Create YAML for YOLO Classification
     yaml_data = {
