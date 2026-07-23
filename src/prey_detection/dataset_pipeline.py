@@ -60,6 +60,22 @@ def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=15
                 
                 crop_img = img[y1_pad:y2_pad, x1_pad:x2_pad].copy()
                 
+                # --- SQUARE PADDING LOGIC ---
+                ch, cw = crop_img.shape[:2]
+                max_dim = max(ch, cw)
+                top_pad = (max_dim - ch) // 2
+                bottom_pad = max_dim - ch - top_pad
+                left_pad = (max_dim - cw) // 2
+                right_pad = max_dim - cw - left_pad
+                
+                crop_img = cv2.copyMakeBorder(
+                    crop_img, 
+                    top_pad, bottom_pad, left_pad, right_pad, 
+                    cv2.BORDER_CONSTANT, 
+                    value=[0, 0, 0]
+                )
+                # ----------------------------
+                
                 # Colors/CLAHE
                 if color_mode == "grayscale":
                     crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
@@ -115,6 +131,22 @@ def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=15
                 y1_pad = min(y2_pad - 1, y1_pad)
                 
                 crop_img = img[y1_pad:y2_pad, x1_pad:x2_pad].copy()
+                
+                # --- SQUARE PADDING LOGIC ---
+                ch, cw = crop_img.shape[:2]
+                max_dim = max(ch, cw)
+                top_pad = (max_dim - ch) // 2
+                bottom_pad = max_dim - ch - top_pad
+                left_pad = (max_dim - cw) // 2
+                right_pad = max_dim - cw - left_pad
+                
+                crop_img = cv2.copyMakeBorder(
+                    crop_img, 
+                    top_pad, bottom_pad, left_pad, right_pad, 
+                    cv2.BORDER_CONSTANT, 
+                    value=[0, 0, 0]
+                )
+                # ----------------------------
                 
                 # Colors/CLAHE
                 if color_mode == "grayscale":

@@ -58,6 +58,22 @@ def test_padding(input_dir, output_dir, crop_model_path, pad_w=10, pad_top=10, p
             # Actual crop
             img_cropped = img[y1_pad:y2_pad, x1_pad:x2_pad]
             
+            # --- SQUARE PADDING LOGIC ---
+            ch, cw = img_cropped.shape[:2]
+            max_dim = max(ch, cw)
+            top_pad_sq = (max_dim - ch) // 2
+            bottom_pad_sq = max_dim - ch - top_pad_sq
+            left_pad_sq = (max_dim - cw) // 2
+            right_pad_sq = max_dim - cw - left_pad_sq
+            
+            img_cropped = cv2.copyMakeBorder(
+                img_cropped, 
+                top_pad_sq, bottom_pad_sq, left_pad_sq, right_pad_sq, 
+                cv2.BORDER_CONSTANT, 
+                value=[0, 0, 0]
+            )
+            # ----------------------------
+            
             # Save visual test
             cv2.imwrite(str(output_path / f"test_{i}_boxes.jpg"), img_drawn)
             cv2.imwrite(str(output_path / f"test_{i}_crop.jpg"), img_cropped)

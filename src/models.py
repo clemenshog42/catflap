@@ -47,10 +47,11 @@ class CatFlapPipeline:
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
             gray_frame = clahe.apply(gray_frame)
         
-        # persist=True enables tracking across frames
-        # tracker="bytetrack.yaml" uses the ByteTrack algorithm built into Ultralytics
+        # Disable tracking algorithms (like ByteTrack) to ensure the bounding box
+        # matches the precise, instantaneous raw detection used during training.
+        # Smoothing can cause the box to lag or shift, ruining the tight bottom padding!
         try:
-            results = self.detector.track(gray_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
+            results = self.detector(gray_frame, verbose=False)
             return results[0] # Return the first (and only) frame's results
         except ValueError as e:
             print(f"Tracking error (likely dimension mismatch): {e}")
@@ -90,8 +91,28 @@ class CatFlapPipeline:
         if crop.size == 0:
             return 0.0
             
+        # --- SQUARE PADDING LOGIC ---
+        # YOLO Classification forces a CenterCrop if the image is not a perfect square.
+        # We must manually pad the crop with black pixels to make it a perfect square
+        # so the CenterCrop doesn't secretly chop off our asymmetrical dangling prey padding!
+        ch, cw = crop.shape[:2]
+        max_dim = max(ch, cw)
+        
+        top_pad = (max_dim - ch) // 2
+        bottom_pad = max_dim - ch - top_pad
+        left_pad = (max_dim - cw) // 2
+        right_pad = max_dim - cw - left_pad
+        
+        square_crop = cv2.copyMakeBorder(
+            crop, 
+            top_pad, bottom_pad, left_pad, right_pad, 
+            cv2.BORDER_CONSTANT, 
+            value=[0, 0, 0]
+        )
+        # ----------------------------
+            
         # Convert crop to grayscale, apply optional CLAHE, then back to 3-channel (g, g, g) as per training
-        gray_crop = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+        gray_crop = cv2.cvtColor(square_crop, cv2.COLOR_BGR2GRAY)
         
         if self.apply_clahe_classifier:
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
