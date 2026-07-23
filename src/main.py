@@ -32,11 +32,11 @@ def main(video_path, save_uncertain_dir=None):
     # Initialize pipeline with placeholder model paths
     pipeline = CatFlapPipeline(
         detector_path="models/face_gray_float16.tflite",
-        classifier_path="models/best_prey_23_07_V1_openvino_model"
+        classifier_path="models/best_prey_23_07_V4_openvino_model"
     )
     
     # Initialize state machine
-    state_machine = StateMachine(history_length=15, threshold=0.2, max_missed_frames=30)
+    state_machine = StateMachine(history_length=15, threshold=0.8, max_missed_frames=30)
     
     # Setup for hard negative mining
     if save_uncertain_dir:
@@ -68,9 +68,13 @@ def main(video_path, save_uncertain_dir=None):
         # 1 & 2. Run Object Detection and Tracking (ByteTrack)
         results = pipeline.run_detector(frame)
         
-        if results and results.boxes and results.boxes.id is not None:
+        if results and results.boxes:
             boxes = results.boxes.xyxy.cpu().numpy()
-            track_ids = results.boxes.id.int().cpu().tolist()
+            if results.boxes.id is not None:
+                track_ids = results.boxes.id.int().cpu().tolist()
+            else:
+                # If ByteTrack is disabled, default all detections to track ID 0
+                track_ids = [0] * len(boxes)
             
             for box, track_id in zip(boxes, track_ids):
                 # 3. Run Classification on the crop
