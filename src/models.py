@@ -11,13 +11,12 @@ except ImportError:
 from ultralytics import YOLO
 
 class CatFlapPipeline:
-    def __init__(self, detector_path="path/to/cat_face_detector.pt", classifier_path="path/to/prey_classifier.pt", apply_clahe_detector=False, apply_clahe_classifier=True):
+    def __init__(self, detector_path="path/to/cat_face_detector.pt", classifier_path="path/to/prey_classifier.pt", apply_clahe=False):
         """
         Initializes the YOLO models.
         Currently using placeholders. Replace with actual paths when ready.
         """
-        self.apply_clahe_detector = apply_clahe_detector
-        self.apply_clahe_classifier = apply_clahe_classifier
+        self.apply_clahe = apply_clahe
         print(f"Loading Object Detector from: {detector_path}")
         try:
             self.detector = YOLO(detector_path, task='detect')
@@ -43,7 +42,7 @@ class CatFlapPipeline:
         # Convert to grayscale as the model name suggests it expects 1-channel input
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
-        if self.apply_clahe_detector:
+        if self.apply_clahe:
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
             gray_frame = clahe.apply(gray_frame)
         
@@ -92,7 +91,7 @@ class CatFlapPipeline:
         # Convert crop to grayscale, apply optional CLAHE, then back to 3-channel (g, g, g) as per training
         gray_crop = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
         
-        if self.apply_clahe_classifier:
+        if self.apply_clahe:
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
             gray_crop = clahe.apply(gray_crop)
             
