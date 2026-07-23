@@ -11,7 +11,7 @@ except ImportError:
 from ultralytics import YOLO
 
 class CatFlapPipeline:
-    def __init__(self, detector_path="path/to/cat_face_detector.pt", classifier_path="path/to/prey_classifier.pt", apply_clahe=True):
+    def __init__(self, detector_path="path/to/cat_face_detector.pt", classifier_path="path/to/prey_classifier.pt", apply_clahe=False):
         """
         Initializes the YOLO models.
         Currently using placeholders. Replace with actual paths when ready.
