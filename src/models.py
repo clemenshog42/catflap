@@ -47,11 +47,11 @@ class CatFlapPipeline:
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
             gray_frame = clahe.apply(gray_frame)
         
-        # Disable tracking algorithms (like ByteTrack) to ensure the bounding box
-        # matches the precise, instantaneous raw detection used during training.
-        # Smoothing can cause the box to lag or shift, ruining the tight bottom padding!
+        # We re-enable ByteTrack here to preserve the track IDs for the State Machine.
+        # The CenterCrop square padding fix we applied below is robust enough to handle 
+        # any minor tracking jitter without losing the prey!
         try:
-            results = self.detector(gray_frame, verbose=False)
+            results = self.detector.track(gray_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
             return results[0] # Return the first (and only) frame's results
         except ValueError as e:
             print(f"Tracking error (likely dimension mismatch): {e}")
