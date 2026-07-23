@@ -11,12 +11,13 @@ except ImportError:
 from ultralytics import YOLO
 
 class CatFlapPipeline:
-    def __init__(self, detector_path="path/to/cat_face_detector.pt", classifier_path="path/to/prey_classifier.pt", apply_clahe=False):
+    def __init__(self, detector_path="path/to/cat_face_detector.pt", classifier_path="path/to/prey_classifier.pt", apply_clahe_detector=False, apply_clahe_classifier=True):
         """
         Initializes the YOLO models.
         Currently using placeholders. Replace with actual paths when ready.
         """
-        self.apply_clahe = apply_clahe
+        self.apply_clahe_detector = apply_clahe_detector
+        self.apply_clahe_classifier = apply_clahe_classifier
         print(f"Loading Object Detector from: {detector_path}")
         try:
             self.detector = YOLO(detector_path, task='detect')
@@ -42,7 +43,7 @@ class CatFlapPipeline:
         # Convert to grayscale as the model name suggests it expects 1-channel input
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
-        if self.apply_clahe:
+        if self.apply_clahe_detector:
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
             gray_frame = clahe.apply(gray_frame)
         
@@ -70,17 +71,18 @@ class CatFlapPipeline:
         
         # Add asymmetrical padding (heavy on bottom for dangling prey)
         pad_w = 15
-        pad_top = 10
+        pad_top = -10
         pad_bottom = 30
         x1 -= pad_w
         y1 -= pad_top
         x2 += pad_w
         y2 += pad_bottom
         
-        # Ensure coordinates are within frame bounds
+        # Ensure coordinates are within frame bounds and y1 is strictly less than y2
         h, w = frame.shape[:2]
         x1, y1 = max(0, x1), max(0, y1)
         x2, y2 = min(w, x2), min(h, y2)
+        y1 = min(y2 - 1, y1)
         
         # Crop the image
         crop = frame[y1:y2, x1:x2]
@@ -91,7 +93,7 @@ class CatFlapPipeline:
         # Convert crop to grayscale, apply optional CLAHE, then back to 3-channel (g, g, g) as per training
         gray_crop = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
         
-        if self.apply_clahe:
+        if self.apply_clahe_classifier:
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
             gray_crop = clahe.apply(gray_crop)
             

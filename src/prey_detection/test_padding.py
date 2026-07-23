@@ -49,6 +49,9 @@ def test_padding(input_dir, output_dir, crop_model_path, pad_w=10, pad_top=10, p
             x2_pad = min(w, x2 + pad_w)
             y2_pad = min(h, y2 + pad_bottom)
             
+            # Ensure negative padding doesn't invert the crop
+            y1_pad = min(y2_pad - 1, y1_pad)
+            
             # Padded box in GREEN
             cv2.rectangle(img_drawn, (x1_pad, y1_pad), (x2_pad, y2_pad), (0, 255, 0), 2)
             

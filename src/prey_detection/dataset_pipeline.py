@@ -9,7 +9,7 @@ from pathlib import Path
 from tqdm import tqdm
 from ultralytics import YOLO
 
-def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=15, pad_top=10, pad_bottom=50, color_mode="rgb", apply_clahe=False, val_ratio=0.2, seed=42):
+def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=15, pad_top=-10, pad_bottom=30, color_mode="rgb", apply_clahe=False, val_ratio=0.2, seed=42):
     random.seed(seed)
     
     prey_path = Path(prey_dir)
@@ -72,6 +72,9 @@ def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=15
                     y1_pad = max(0, y1 - pad_top)
                     x2_pad = min(w, x2 + pad_w)
                     y2_pad = min(h, y2 + pad_bottom)
+                    
+                    # Ensure negative padding doesn't invert the crop
+                    y1_pad = min(y2_pad - 1, y1_pad)
                     
                     # Create the crop on a fresh copy so we don't destroy the original image for the next loop
                     crop_img = img[y1_pad:y2_pad, x1_pad:x2_pad].copy()
