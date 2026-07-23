@@ -36,8 +36,7 @@ def main(video_path, save_uncertain_dir=None):
     )
     
     # Initialize state machine
-    # We raise the threshold to 0.85 so it requires high confidence to lock the flap
-    state_machine = StateMachine(history_length=15, threshold=0.85, max_missed_frames=30)
+    state_machine = StateMachine(history_length=15, threshold=0.2, max_missed_frames=30)
     
     # Setup for hard negative mining
     if save_uncertain_dir:
