@@ -32,11 +32,12 @@ def main(video_path, save_uncertain_dir=None):
     # Initialize pipeline with placeholder model paths
     pipeline = CatFlapPipeline(
         detector_path="models/face_gray_float16.tflite",
-        classifier_path="models/best_prey_30_06_V2_openvino_model"
+        classifier_path="models/best_prey_23_07_V1_openvino_model"
     )
     
     # Initialize state machine
-    state_machine = StateMachine(history_length=15, threshold=0.2, max_missed_frames=30)
+    # We raise the threshold to 0.85 so it requires high confidence to lock the flap
+    state_machine = StateMachine(history_length=15, threshold=0.85, max_missed_frames=30)
     
     # Setup for hard negative mining
     if save_uncertain_dir:
