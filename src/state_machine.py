@@ -7,9 +7,9 @@ class State(Enum):
     CAT_NO_PREY = "CAT_NO_PREY"
     CAT_WITH_PREY = "CAT_WITH_PREY"
 
-class FlapCommand(Enum):
-    LOCK = "LOCK"
-    UNLOCK = "UNLOCK"
+class AccessState(Enum):
+    DENIED = "DENIED"
+    GRANTED = "GRANTED"
 
 class TrackState:
     """Manages the state and confidence history for a single tracked object (cat)."""
@@ -36,7 +36,7 @@ class TrackState:
         return self.current_state
 
 class StateMachine:
-    """Manages multiple TrackStates and evaluates the global flap decision."""
+    """Manages multiple TrackStates and evaluates the global access decision."""
     
     def __init__(self, history_length=15, threshold=0.8, max_missed_frames=30):
         self.tracks = {} # track_id -> TrackState
@@ -45,10 +45,10 @@ class StateMachine:
         self.max_missed_frames = max_missed_frames
         
         self.global_callbacks = []
-        self.last_command = None
+        self.last_state = None
         
     def subscribe(self, callback):
-        """Subscribe to global flap command changes (FlapCommand.LOCK / UNLOCK)."""
+        """Subscribe to global access state changes (AccessState.GRANTED / DENIED)."""
         self.global_callbacks.append(callback)
         
     def update(self, track_id, prey_confidence, frame_idx):
@@ -65,10 +65,10 @@ class StateMachine:
         
     def process_global_state(self, current_frame):
         """
-        Evaluates all active tracks to make a global decision on the flap.
-        Rule 1: If ANY cat has prey, LOCK the flap.
-        Rule 2: If NO cat has prey, and AT LEAST ONE cat is clean, UNLOCK the flap.
-        Triggers callbacks ONLY when the global command changes.
+        Evaluates all active tracks to make a global decision on access.
+        Rule 1: If ANY cat has prey, DENY access.
+        Rule 2: If NO cat has prey, and AT LEAST ONE cat is clean, GRANT access.
+        Triggers callbacks ONLY when the global access state changes.
         """
         # First, remove stale tracks that haven't been seen recently
         stale_ids = []
@@ -89,19 +89,19 @@ class StateMachine:
             elif track.current_state == State.CAT_NO_PREY:
                 has_clean_cat = True
                 
-        command = None
+        access_state = None
         if has_prey:
-            # Immediate priority: lock if any prey is present
-            command = FlapCommand.LOCK
+            # Immediate priority: deny access if any prey is present
+            access_state = AccessState.DENIED
         elif has_clean_cat:
-            # Safe to unlock if at least one clean cat is present and NO prey is present
-            command = FlapCommand.UNLOCK
+            # Safe to grant access if at least one clean cat is present and NO prey is present
+            access_state = AccessState.GRANTED
             
-        # Only notify if we reached a conclusive command AND it's different from the last emitted command
-        if command and command != self.last_command:
-            self.last_command = command
+        # Only notify if we reached a conclusive state AND it's different from the last emitted state
+        if access_state and access_state != self.last_state:
+            self.last_state = access_state
             for cb in self.global_callbacks:
-                cb(command)
+                cb(access_state)
                 
     def get_state(self, track_id):
         if track_id in self.tracks:
