@@ -1,21 +1,27 @@
 import argparse
 from ultralytics import YOLO
 
-def export_model(model_path, format_type, half=False, imgsz=None):
+def export_model(model_path, format_type, half=False, int8=False, imgsz=None):
     """
     Exports a YOLO model to a specific format.
-    Supported formats include: 'openvino', 'tflite', 'onnx', 'engine', 'coreml', etc.
+    Supported formats include: 'openvino', 'tflite', 'litert', 'onnx', 'engine', 'coreml', etc.
     """
     print(f"Loading model from {model_path}...")
     model = YOLO(model_path)
     
     export_kwargs = {"format": format_type}
     
-    # Handle quantization and half-precision logic based on new Ultralytics API
-    if format_type == "litert" and half:
-        print("Warning: '--half' (FP16) is not supported by Ultralytics for LiteRT. Defaulting to FP32.")
-    elif half:
-        export_kwargs["half"] = True
+    if format_type == "litert":
+        if int8:
+            print("Using 'w8a32' (Dynamic INT8) quantization for LiteRT...")
+            export_kwargs["quantize"] = "w8a32"
+        elif half:
+            print("Warning: '--half' (FP16) is not supported by Ultralytics for LiteRT. Defaulting to FP32.")
+    else:
+        if half:
+            export_kwargs["half"] = True
+        if int8:
+            export_kwargs["int8"] = True
         
     if imgsz:
         export_kwargs["imgsz"] = imgsz
@@ -32,8 +38,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Export YOLO models to different formats.")
     parser.add_argument("--model_path", required=True, help="Path to the trained .pt model (e.g., best.pt)")
     parser.add_argument("--format", required=True, choices=["openvino", "tflite", "litert", "onnx", "engine", "coreml", "pb"], help="Target format for export")
-    parser.add_argument("--half", action="store_true", help="Use FP16 half-precision for faster inference (recommended if hardware supports it)")
+    parser.add_argument("--half", action="store_true", help="Use FP16 half-precision for faster inference")
+    parser.add_argument("--int8", action="store_true", help="Use INT8 quantization (recommended for Raspberry Pi)")
     parser.add_argument("--imgsz", type=int, help="Optional specific image size for export (e.g., 224 or 640)")
     
     args = parser.parse_args()
-    export_model(args.model_path, args.format, args.half, args.imgsz)
+    export_model(args.model_path, args.format, args.half, args.int8, args.imgsz)
