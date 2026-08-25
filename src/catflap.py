@@ -1,4 +1,5 @@
 import time
+import cv2
 
 try:
     from gpiozero import Servo
@@ -6,29 +7,91 @@ except ImportError:
     print("Warning: gpiozero library not found. Catflap servo control will run in simulation mode.")
     Servo = None
 
+try:
+    from picamera2 import Picamera2
+except ImportError:
+    Picamera2 = None
+
 class Catflap:
-    """Controls the physical locking mechanism of the cat flap using a servo motor."""
+    """
+    Central object representing the physical Cat Flap hardware.
+    Encapsulates both the locking mechanism (Servo) and the visual sensor (Camera/Video).
+    """
     
-    def __init__(self, gpio_pin, lock_value=-1.0, unlock_value=1.0):
+    def __init__(self, gpio_pin=17, lock_value=-1.0, unlock_value=1.0, video_source=None):
         """
-        Initialize the Catflap with the GPIO pin connected to the servo.
-        lock_value and unlock_value correspond to servo positions (-1.0 to 1.0).
-        You may need to adjust these values based on how your physical servo is mounted.
+        Initialize the Catflap.
+        If video_source is None, it attempts to use the physical Raspberry Pi Camera (Picamera2).
+        If video_source is a path (str) or integer, it uses cv2.VideoCapture (for mp4 files or webcams).
         """
+        # --- Servo Lock Initialization ---
         self.gpio_pin = gpio_pin
         self.lock_value = lock_value
         self.unlock_value = unlock_value
         self.is_locked = False
         
         if Servo is not None:
-            # We initialize the servo. For common SG90 servos, you might need to adjust 
-            # min_pulse_width and max_pulse_width if it doesn't rotate a full 180 degrees.
             self.servo = Servo(gpio_pin)
-            self.unlock() # Ensure it starts unlocked
+            self.unlock() 
         else:
             self.servo = None
-            print(f"[Simulated Catflap] Initialized on GPIO {gpio_pin}")
+            print(f"[Simulated Catflap] Lock initialized on GPIO {gpio_pin}")
             self.unlock()
+            
+        # --- Camera Sensor Initialization ---
+        self.video_source = video_source
+        self.picam2 = None
+        self.cap = None
+        
+        if self.video_source is None:
+            if Picamera2 is None:
+                raise RuntimeError("Error: Picamera2 is not installed and no alternative video_source was provided.")
+            print("[Catflap Sensor] Initializing physical Picamera2...")
+            self.picam2 = Picamera2()
+            config = self.picam2.create_preview_configuration(main={"size": (640, 480)})
+            self.picam2.configure(config)
+            self.picam2.start()
+        else:
+            print(f"[Catflap Sensor] Opening video source: {self.video_source}")
+            self.cap = cv2.VideoCapture(self.video_source)
+            if not self.cap.isOpened():
+                raise RuntimeError(f"Error: Could not open video source {self.video_source}")
+
+    def capture_continuous(self):
+        """
+        Generator that yields frames continuously from the active sensor (Camera or Video file).
+        Automatically handles differences between Picamera2 streams and OpenCV video reading.
+        """
+        if self.picam2 is not None:
+            # Native Picamera2 hardware loop
+            for request in self.picam2.capture_continuous(self.picam2.make_array("main")):
+                yield request.array
+        elif self.cap is not None:
+            # Standard OpenCV video/webcam loop
+            while True:
+                ret, frame = self.cap.read()
+                if not ret:
+                    print("[Catflap Sensor] End of video stream reached.")
+                    break
+                yield frame
+
+    def get_video_properties(self):
+        """Returns the (width, height, fps) of the active sensor."""
+        if self.cap is not None:
+            width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            fps = self.cap.get(cv2.CAP_PROP_FPS) or 30.0
+            return width, height, fps
+        return 640, 480, 30.0
+
+    def close(self):
+        """Safely shuts down the camera hardware and releases resources."""
+        if self.picam2 is not None:
+            self.picam2.stop()
+        if self.cap is not None:
+            self.cap.release()
+
+    # --- Servo Methods ---
             
     def lock(self):
         """Locks the cat flap by rotating the servo to the lock_value."""

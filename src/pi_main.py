@@ -1,47 +1,22 @@
 import cv2
 import argparse
-import numpy as np
-
-# Try importing picamera2. If not on a Pi, fail gracefully.
-try:
-    from picamera2 import Picamera2
-except ImportError:
-    print("Warning: picamera2 library is not installed. Live camera mode will not work.")
-    Picamera2 = None
-
 from processor import CatFlapProcessor
+from catflap import Catflap
 
 def main(save_uncertain_dir=None, headless=False, video_path=None, output_path=None):
     processor = CatFlapProcessor(save_uncertain_dir=save_uncertain_dir)
     
-    # SETUP VIDEO SOURCE
-    if video_path:
-        print(f"Opening video file: {video_path}")
-        cap = cv2.VideoCapture(video_path)
-        if not cap.isOpened():
-            print(f"Error: Could not open video file {video_path}")
-            return
-            
-        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
-    else:
-        if Picamera2 is None:
-            print("Error: picamera2 is not installed. Please provide a --video file to run in video mode.")
-            return
-            
-        print("Initializing Picamera2...")
-        picam2 = Picamera2()
-        config = picam2.create_preview_configuration(main={"size": (640, 480)})
-        picam2.configure(config)
-        picam2.start()
-        
-        width, height = 640, 480
-        fps = 30.0
-    
-    # SETUP VIDEO WRITER
+    # Initialize the central Catflap hardware (handles both the lock and the camera/video source)
+    try:
+        flap = Catflap(video_source=video_path)
+    except RuntimeError as e:
+        print(e)
+        return
+
+    # Optional: Setup Video Writer to save output
     writer = None
     if output_path:
+        width, height, fps = flap.get_video_properties()
         # Use mp4v codec for standard mp4 output
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         writer = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
@@ -52,46 +27,23 @@ def main(save_uncertain_dir=None, headless=False, video_path=None, output_path=N
 
     frame_idx = 0
     try:
-        if video_path:
-            # --- VIDEO FILE LOOP ---
-            while True:
-                ret, frame = cap.read()
-                if not ret:
-                    print("Finished processing video.")
+        # Loop continuously over frames from the smart flap hardware
+        for frame in flap.capture_continuous():
+            frame_idx += 1
+            
+            processor.process_frame(frame, frame_idx)
+            
+            if writer:
+                writer.write(frame)
+                
+            if not headless:
+                cv2.imshow("Cat Flap Prey Detection", frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
-                    
-                frame_idx += 1
-                processor.process_frame(frame, frame_idx)
-                
-                if writer:
-                    writer.write(frame)
-                    
-                if not headless:
-                    cv2.imshow("Cat Flap Prey Detection", frame)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
-        else:
-            # --- PICAMERA2 LOOP ---
-            for request in picam2.capture_continuous(picam2.make_array("main")):
-                frame = request.array
-                frame_idx += 1
-                
-                processor.process_frame(frame, frame_idx)
-                
-                if writer:
-                    writer.write(frame)
-                    
-                if not headless:
-                    cv2.imshow("Cat Flap Prey Detection (PiCamera2)", frame)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
     except KeyboardInterrupt:
         print("\nStopping...")
     finally:
-        if video_path:
-            cap.release()
-        else:
-            picam2.stop()
+        flap.close()
             
         if writer:
             writer.release()

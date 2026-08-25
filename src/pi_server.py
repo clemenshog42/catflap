@@ -5,12 +5,6 @@ import time
 from flask import Flask, Response, render_template_string, jsonify
 from flasgger import Swagger
 
-try:
-    from picamera2 import Picamera2
-except ImportError:
-    print("Error: picamera2 library is not installed.")
-    Picamera2 = None
-
 from processor import CatFlapProcessor
 from catflap import Catflap
 from state_machine import State
@@ -57,28 +51,17 @@ def on_cat_status_changed(track_id, new_state, history_length):
             auto_lock_timer = None
 
 def camera_loop(save_uncertain_dir):
-    """Background thread that continuously processes the camera feed."""
+    """Background thread that continuously processes frames from the Catflap."""
     global current_frame_mjpeg
     
-    if Picamera2 is None:
-        print("Picamera2 not available, camera loop terminating.")
-        return
-        
     processor = CatFlapProcessor(save_uncertain_dir=save_uncertain_dir)
-    
     # Subscribe to state changes to trigger the flap hardware
     processor.state_machine.subscribe(on_cat_status_changed)
     
-    print("Initializing Picamera2 in background...")
-    picam2 = Picamera2()
-    config = picam2.create_preview_configuration(main={"size": (640, 480)})
-    picam2.configure(config)
-    picam2.start()
-    
     frame_idx = 0
     try:
-        for request in picam2.capture_continuous(picam2.make_array("main")):
-            frame = request.array
+        # Loop continuously over frames from the smart flap hardware
+        for frame in flap.capture_continuous():
             frame_idx += 1
             
             # Process the frame
@@ -91,7 +74,7 @@ def camera_loop(save_uncertain_dir):
                     current_frame_mjpeg = buffer.tobytes()
                     
     finally:
-        picam2.stop()
+        flap.close()
 
 # --- API Endpoints ---
 
@@ -188,10 +171,15 @@ if __name__ == "__main__":
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Host IP to bind to")
     parser.add_argument("--port", type=int, default=5000, help="Port to bind to")
     parser.add_argument("--gpio", type=int, default=17, help="GPIO pin for the servo")
+    parser.add_argument("--video", type=str, default=None, help="Optional: Path to an input video file to use instead of the camera")
     args = parser.parse_args()
     
-    # Initialize the hardware
-    flap = Catflap(gpio_pin=args.gpio)
+    # Initialize the central Catflap hardware
+    try:
+        flap = Catflap(gpio_pin=args.gpio, video_source=args.video)
+    except RuntimeError as e:
+        print(e)
+        exit(1)
     
     # Start the camera processing loop in a background thread
     pipeline_thread = threading.Thread(
