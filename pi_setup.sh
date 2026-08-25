@@ -28,11 +28,24 @@ python3 -m venv --system-site-packages "$VENV_DIR"
 
 echo "[3/5] Installing requirements..."
 
+# Create a local temporary directory to prevent /tmp (RAM disk) from filling up
+mkdir -p "$WORKING_DIR/pip_tmp"
+export TMPDIR="$WORKING_DIR/pip_tmp"
+
+# Pre-install CPU-only PyTorch to prevent pip from downloading massive NVIDIA CUDA wheels
+echo "Installing CPU-only PyTorch..."
+"$VENV_DIR/bin/pip" install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
 if [ -f "$WORKING_DIR/pi_requirements.txt" ]; then
-    "$VENV_DIR/bin/pip" install -r "$WORKING_DIR/pi_requirements.txt"
+    echo "Installing remaining packages from pi_requirements.txt..."
+    "$VENV_DIR/bin/pip" install --no-cache-dir -r "$WORKING_DIR/pi_requirements.txt"
 else
     echo "Warning: pi_requirements.txt not found in $WORKING_DIR"
 fi
+
+# Cleanup temp dir
+rm -rf "$WORKING_DIR/pip_tmp"
+unset TMPDIR
 
 # -------------------------------
 # CREATE SYSTEMD SERVICE
