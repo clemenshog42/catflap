@@ -42,6 +42,12 @@ class CatFlapProcessor:
         self.save_uncertain_dir = save_uncertain_dir
         self.last_saved_frame = {}
         
+        # FPS Tracking
+        import time
+        self.fps = 0.0
+        self.last_time = time.time()
+        self.frame_count = 0
+        
         if save_uncertain_dir:
             os.makedirs(save_uncertain_dir, exist_ok=True)
             print(f"Hard Negative Mining enabled. Saving uncertain frames to {save_uncertain_dir}")
@@ -51,6 +57,7 @@ class CatFlapProcessor:
         Runs the full detection, classification, tracking, and drawing pipeline on a single frame.
         Modifies the frame in-place.
         """
+        import time
         pristine_frame = frame.copy()
         
         # 1 & 2. Run Object Detection and Tracking
@@ -82,4 +89,18 @@ class CatFlapProcessor:
                 
         # Clean up stale tracks
         self.state_machine.cleanup_stale_tracks(frame_idx)
+        
+        # Calculate and Draw FPS
+        current_time = time.time()
+        self.frame_count += 1
+        elapsed = current_time - self.last_time
+        
+        # Update FPS string every 1 second
+        if elapsed >= 1.0:
+            self.fps = self.frame_count / elapsed
+            self.frame_count = 0
+            self.last_time = current_time
+            
+        cv2.putText(frame, f"FPS: {self.fps:.1f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        
         return frame
