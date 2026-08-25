@@ -3,12 +3,12 @@ import argparse
 from processor import CatFlapProcessor
 from catflap import Catflap
 
-def main(save_uncertain_dir=None, headless=False, video_path=None, output_path=None):
+def main(save_uncertain_dir=None, headless=False, video_path=None, output_path=None, simulate_servo=False):
     processor = CatFlapProcessor(save_uncertain_dir=save_uncertain_dir)
     
     # Initialize the central Catflap hardware (handles both the lock and the camera/video source)
     try:
-        flap = Catflap(video_source=video_path)
+        flap = Catflap(video_source=video_path, simulate_servo=simulate_servo)
     except RuntimeError as e:
         print(e)
         return
@@ -59,11 +59,13 @@ if __name__ == "__main__":
     parser.add_argument("--headless", action="store_true", help="Run without a display")
     parser.add_argument("--video", type=str, default=None, help="Path to an input video file (overrides live camera)")
     parser.add_argument("--output", type=str, default=None, help="Path to save the output video (e.g., output.mp4)")
+    parser.add_argument("--simulate-servo", action="store_true", help="Run without initializing the physical servo motor")
     args = parser.parse_args()
     
     main(
         save_uncertain_dir=args.save_uncertain if args.save_uncertain else None, 
         headless=args.headless,
         video_path=args.video,
-        output_path=args.output
+        output_path=args.output,
+        simulate_servo=args.simulate_servo
     )

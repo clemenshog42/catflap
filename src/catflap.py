@@ -18,11 +18,12 @@ class Catflap:
     Encapsulates both the locking mechanism (Servo) and the visual sensor (Camera/Video).
     """
     
-    def __init__(self, gpio_pin=17, lock_value=-1.0, unlock_value=1.0, video_source=None):
+    def __init__(self, gpio_pin=17, lock_value=-1.0, unlock_value=1.0, video_source=None, simulate_servo=False):
         """
         Initialize the Catflap.
         If video_source is None, it attempts to use the physical Raspberry Pi Camera (Picamera2).
         If video_source is a path (str) or integer, it uses cv2.VideoCapture (for mp4 files or webcams).
+        If simulate_servo is True, it skips hardware PWM initialization and only prints lock states.
         """
         # --- Servo Lock Initialization ---
         self.gpio_pin = gpio_pin
@@ -30,12 +31,13 @@ class Catflap:
         self.unlock_value = unlock_value
         self.is_locked = False
         
-        if Servo is not None:
+        if Servo is not None and not simulate_servo:
             self.servo = Servo(gpio_pin)
             self.unlock() 
         else:
             self.servo = None
-            print(f"[Simulated Catflap] Lock initialized on GPIO {gpio_pin}")
+            mode = "Forced Simulation" if simulate_servo else "Missing Library Simulation"
+            print(f"[{mode}] Lock initialized on GPIO {gpio_pin}")
             self.unlock()
             
         # --- Camera Sensor Initialization ---
