@@ -9,11 +9,13 @@ def export_model(model_path, format_type, half=False, imgsz=None):
     print(f"Loading model from {model_path}...")
     model = YOLO(model_path)
     
-    export_kwargs = {"format": format_type, "half": half}
+    export_kwargs = {"format": format_type}
     
-    # LiteRT is the new branding for TFLite, but Ultralytics still expects 'tflite'
-    if format_type == "litert":
-        export_kwargs["format"] = "tflite"
+    # Handle quantization and half-precision logic based on new Ultralytics API
+    if format_type == "litert" and half:
+        print("Warning: '--half' (FP16) is not supported by Ultralytics for LiteRT. Defaulting to FP32.")
+    elif half:
+        export_kwargs["half"] = True
         
     if imgsz:
         export_kwargs["imgsz"] = imgsz
