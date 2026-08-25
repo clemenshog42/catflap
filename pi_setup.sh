@@ -8,22 +8,20 @@ WORKING_DIR="$(pwd)"
 VENV_DIR="$WORKING_DIR/venv"
 PYTHON_SCRIPT="src/pi_server.py"
 
-PYTHON_CMD="python3.13"
-
 # -------------------------------
 # INSTALL SYSTEM DEPENDENCIES
 # -------------------------------
 echo "[1/5] Installing system packages..."
 
 sudo apt update
-sudo apt install -y python3-picamera2 python3-libcamera ${PYTHON_CMD}-venv python3-pip python3-opencv
+sudo apt install -y python3-picamera2 python3-libcamera python3-venv python3-pip python3-opencv
 
 # -------------------------------
 # CREATE VENV WITH SYSTEM PACKAGES
 # -------------------------------
 echo "[2/5] Creating venv with system-site-packages..."
 # --system-site-packages is CRITICAL so the venv can see python3-picamera2!
-${PYTHON_CMD} -m venv --system-site-packages "$VENV_DIR"
+python3 -m venv --system-site-packages "$VENV_DIR"
 
 # Upgrade pip inside venv
 "$VENV_DIR/bin/pip" install --upgrade pip
