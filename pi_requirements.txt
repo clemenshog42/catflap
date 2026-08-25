@@ -1,0 +1,9 @@
+# Raspberry Pi specific dependencies
+# Note: 'picamera2' is intentionally excluded. Install it via apt:
+# sudo apt install python3-picamera2
+
+numpy
+opencv-python
+ultralytics
+flask
+ai-edge-litert
