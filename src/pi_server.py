@@ -7,7 +7,7 @@ from flasgger import Swagger
 
 from processor import CatFlapProcessor
 from catflap import Catflap
-from state_machine import State
+from state_machine import State, FlapCommand
 
 app = Flask(__name__)
 swagger = Swagger(app)
@@ -33,17 +33,17 @@ def schedule_auto_lock():
     auto_lock_timer = threading.Timer(30.0, flap.lock)
     auto_lock_timer.start()
 
-def on_cat_status_changed(track_id, new_state, history_length):
-    """Event listener triggered by the StateMachine when the cat's state changes."""
+def on_flap_command(command):
+    """Event listener triggered by the StateMachine when the global flap decision changes."""
     global auto_lock_timer
     
-    if new_state == State.CAT_NO_PREY:
-        print(f"[Event] Cat {track_id} detected WITHOUT prey. Unlocking flap for 30s.")
+    if command == FlapCommand.UNLOCK:
+        print("[Event] Clean cat(s) detected. Unlocking flap for 30s.")
         flap.unlock()
         schedule_auto_lock()
         
-    elif new_state == State.CAT_WITH_PREY:
-        print(f"[Event] Cat {track_id} detected WITH PREY! Locking flap immediately.")
+    elif command == FlapCommand.LOCK:
+        print("[Event] Cat WITH PREY detected! Locking flap immediately.")
         flap.lock()
         # Cancel any pending auto-lock since we are locking immediately
         if auto_lock_timer is not None:
@@ -56,7 +56,7 @@ def camera_loop(save_uncertain_dir):
     
     processor = CatFlapProcessor(save_uncertain_dir=save_uncertain_dir)
     # Subscribe to state changes to trigger the flap hardware
-    processor.state_machine.subscribe(on_cat_status_changed)
+    processor.state_machine.subscribe(on_flap_command)
     
     frame_idx = 0
     try:

@@ -87,8 +87,8 @@ class CatFlapProcessor:
                 # Draw results on frame
                 draw_info(frame, box, track_id, current_state, prey_confidence)
                 
-        # Clean up stale tracks
-        self.state_machine.cleanup_stale_tracks(frame_idx)
+        # Clean up stale tracks and evaluate global flap state
+        self.state_machine.process_global_state(frame_idx)
         
         # Calculate and Draw FPS
         current_time = time.time()
