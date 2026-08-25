@@ -1,39 +1,75 @@
 import cv2
 import argparse
-from flask import Flask, Response, render_template_string
+import threading
+import time
+from flask import Flask, Response, render_template_string, jsonify
+from flasgger import Swagger
 
 try:
     from picamera2 import Picamera2
 except ImportError:
-    print("Error: picamera2 library is not installed. Are you running this on a Raspberry Pi?")
-    exit(1)
+    print("Error: picamera2 library is not installed.")
+    Picamera2 = None
 
 from processor import CatFlapProcessor
+from catflap import Catflap
+from state_machine import State
 
 app = Flask(__name__)
+swagger = Swagger(app)
 
-# Basic HTML template for the index page
-INDEX_HTML = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Cat Flap Stream</title>
-    <style>
-        body { background-color: #333; color: white; font-family: Arial, sans-serif; text-align: center; }
-        img { max-width: 100%; height: auto; border: 2px solid #555; }
-    </style>
-</head>
-<body>
-    <h1>Cat Flap Monitor</h1>
-    <img src="{{ url_for('video_feed') }}">
-</body>
-</html>
-"""
+# Global variables for the background pipeline
+pipeline_thread = None
+current_frame_mjpeg = None
+frame_lock = threading.Lock()
 
-def generate_frames(save_uncertain_dir=None):
+# Global hardware
+flap = None
+auto_lock_timer = None
+
+def schedule_auto_lock():
+    """Schedules the flap to automatically lock after 30 seconds."""
+    global auto_lock_timer
+    
+    # Cancel existing timer if there is one
+    if auto_lock_timer is not None:
+        auto_lock_timer.cancel()
+        
+    # Start a new 30 second timer
+    auto_lock_timer = threading.Timer(30.0, flap.lock)
+    auto_lock_timer.start()
+
+def on_cat_status_changed(track_id, new_state, history_length):
+    """Event listener triggered by the StateMachine when the cat's state changes."""
+    global auto_lock_timer
+    
+    if new_state == State.CAT_NO_PREY:
+        print(f"[Event] Cat {track_id} detected WITHOUT prey. Unlocking flap for 30s.")
+        flap.unlock()
+        schedule_auto_lock()
+        
+    elif new_state == State.CAT_WITH_PREY:
+        print(f"[Event] Cat {track_id} detected WITH PREY! Locking flap immediately.")
+        flap.lock()
+        # Cancel any pending auto-lock since we are locking immediately
+        if auto_lock_timer is not None:
+            auto_lock_timer.cancel()
+            auto_lock_timer = None
+
+def camera_loop(save_uncertain_dir):
+    """Background thread that continuously processes the camera feed."""
+    global current_frame_mjpeg
+    
+    if Picamera2 is None:
+        print("Picamera2 not available, camera loop terminating.")
+        return
+        
     processor = CatFlapProcessor(save_uncertain_dir=save_uncertain_dir)
     
-    print("Initializing Picamera2...")
+    # Subscribe to state changes to trigger the flap hardware
+    processor.state_machine.subscribe(on_cat_status_changed)
+    
+    print("Initializing Picamera2 in background...")
     picam2 = Picamera2()
     config = picam2.create_preview_configuration(main={"size": (640, 480)})
     picam2.configure(config)
@@ -50,17 +86,93 @@ def generate_frames(save_uncertain_dir=None):
             
             # Encode frame to JPEG
             ret, buffer = cv2.imencode('.jpg', frame)
-            if not ret:
-                continue
-                
-            frame_bytes = buffer.tobytes()
-            
-            # Yield MJPEG frame format
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-                   
+            if ret:
+                with frame_lock:
+                    current_frame_mjpeg = buffer.tobytes()
+                    
     finally:
         picam2.stop()
+
+# --- API Endpoints ---
+
+@app.route('/api/status', methods=['GET'])
+def get_status():
+    """
+    Get the current lock status of the cat flap
+    ---
+    responses:
+      200:
+        description: Returns the lock status
+        schema:
+          type: object
+          properties:
+            is_locked:
+              type: boolean
+    """
+    return jsonify({"is_locked": flap.is_locked})
+
+@app.route('/api/lock', methods=['POST'])
+def lock_flap():
+    """
+    Manually lock the cat flap
+    ---
+    responses:
+      200:
+        description: Flap locked successfully
+    """
+    flap.lock()
+    return jsonify({"status": "success", "is_locked": flap.is_locked})
+
+@app.route('/api/unlock', methods=['POST'])
+def unlock_flap():
+    """
+    Manually unlock the cat flap (will auto-close after 30s)
+    ---
+    responses:
+      200:
+        description: Flap unlocked successfully
+    """
+    flap.unlock()
+    schedule_auto_lock()
+    return jsonify({"status": "success", "is_locked": flap.is_locked})
+
+# --- Web UI ---
+
+INDEX_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cat Flap Stream</title>
+    <style>
+        body { background-color: #333; color: white; font-family: Arial, sans-serif; text-align: center; }
+        img { max-width: 100%; height: auto; border: 2px solid #555; }
+        .nav { margin-bottom: 20px; }
+        a { color: #4CAF50; text-decoration: none; font-size: 18px; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="/apidocs" target="_blank">📄 Open Swagger API Documentation</a>
+    </div>
+    <h1>Cat Flap Monitor</h1>
+    <img src="{{ url_for('video_feed') }}">
+</body>
+</html>
+"""
+
+def generate_mjpeg_stream():
+    """Yields frames to the HTTP client from the global buffer."""
+    while True:
+        with frame_lock:
+            frame_data = current_frame_mjpeg
+        
+        if frame_data is not None:
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_data + b'\r\n')
+        
+        # Sleep slightly to prevent maxing out CPU in the stream generator
+        time.sleep(0.05)
 
 @app.route('/')
 def index():
@@ -68,18 +180,28 @@ def index():
 
 @app.route('/video_feed')
 def video_feed():
-    return Response(generate_frames(app.config.get('SAVE_UNCERTAIN_DIR')),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(generate_mjpeg_stream(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Raspberry Pi Flask Stream Server")
     parser.add_argument("--save_uncertain", type=str, default="", help="Directory to save uncertain frames")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Host IP to bind to")
     parser.add_argument("--port", type=int, default=5000, help="Port to bind to")
+    parser.add_argument("--gpio", type=int, default=17, help="GPIO pin for the servo")
     args = parser.parse_args()
     
-    app.config['SAVE_UNCERTAIN_DIR'] = args.save_uncertain if args.save_uncertain else None
+    # Initialize the hardware
+    flap = Catflap(gpio_pin=args.gpio)
+    
+    # Start the camera processing loop in a background thread
+    pipeline_thread = threading.Thread(
+        target=camera_loop, 
+        args=(args.save_uncertain if args.save_uncertain else None,),
+        daemon=True # Daemon thread dies when the main Flask app dies
+    )
+    pipeline_thread.start()
     
     print(f"Starting server at http://{args.host}:{args.port}")
-    # Disable reloader so it doesn't initialize the camera twice
+    print(f"Swagger documentation available at http://{args.host}:{args.port}/apidocs")
+    
     app.run(host=args.host, port=args.port, debug=False, threaded=True, use_reloader=False)
