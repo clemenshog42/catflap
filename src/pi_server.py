@@ -1,13 +1,6 @@
 import cv2
 import argparse
-import os
-import numpy as np
-
-try:
-    from flask import Flask, Response, render_template_string
-except ImportError:
-    print("Error: flask library is not installed. Run 'pip install flask'")
-    exit(1)
+from flask import Flask, Response, render_template_string
 
 try:
     from picamera2 import Picamera2
@@ -15,8 +8,7 @@ except ImportError:
     print("Error: picamera2 library is not installed. Are you running this on a Raspberry Pi?")
     exit(1)
 
-from models import CatFlapPipeline
-from state_machine import StateMachine, State
+from processor import CatFlapProcessor
 
 app = Flask(__name__)
 
@@ -38,32 +30,8 @@ INDEX_HTML = """
 </html>
 """
 
-def draw_info(frame, box, track_id, state, prey_conf):
-    x1, y1, x2, y2 = map(int, box)
-    
-    if state == State.CAT_WITH_PREY:
-        color = (0, 0, 255)
-    elif state == State.CAT_NO_PREY:
-        color = (0, 255, 0)
-    else:
-        color = (255, 255, 255)
-        
-    cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-    label = f"ID: {track_id} | {state.value} | Prey: {prey_conf:.2f}"
-    (w, h), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
-    cv2.rectangle(frame, (x1, y1 - 25), (x1 + w, y1), color, -1)
-    cv2.putText(frame, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 1)
-
 def generate_frames(save_uncertain_dir=None):
-    pipeline = CatFlapPipeline(
-        detector_path="models/face_gray_float16.tflite",
-        classifier_path="models/best_prey_23_07_V5_openvino_model",
-        apply_clahe_detector=True,
-        apply_clahe_classifier=True
-    )
-    
-    state_machine = StateMachine(history_length=15, threshold=0.8, max_missed_frames=30)
-    last_saved_frame = {}
+    processor = CatFlapProcessor(save_uncertain_dir=save_uncertain_dir)
     
     print("Initializing Picamera2...")
     picam2 = Picamera2()
@@ -76,30 +44,9 @@ def generate_frames(save_uncertain_dir=None):
         for request in picam2.capture_continuous(picam2.make_array("main")):
             frame = request.array
             frame_idx += 1
-            pristine_frame = frame.copy()
             
-            results = pipeline.run_detector(frame)
-            
-            if results and results.boxes:
-                boxes = results.boxes.xyxy.cpu().numpy()
-                if results.boxes.id is not None:
-                    track_ids = results.boxes.id.int().cpu().tolist()
-                else:
-                    track_ids = [0] * len(boxes)
-                
-                for box, track_id in zip(boxes, track_ids):
-                    prey_confidence = pipeline.run_classifier(frame, box)
-                    current_state = state_machine.update(track_id, prey_confidence, frame_idx)
-                    
-                    if save_uncertain_dir and 0.15 <= prey_confidence <= 0.6:
-                        if track_id not in last_saved_frame or (frame_idx - last_saved_frame[track_id]) > 30:
-                            filename = os.path.join(save_uncertain_dir, f"uncertain_id{track_id}_f{frame_idx}_conf{prey_confidence:.2f}.jpg")
-                            cv2.imwrite(filename, pristine_frame)
-                            last_saved_frame[track_id] = frame_idx
-                    
-                    draw_info(frame, box, track_id, current_state, prey_confidence)
-                    
-            state_machine.cleanup_stale_tracks(frame_idx)
+            # Process the frame
+            processor.process_frame(frame, frame_idx)
             
             # Encode frame to JPEG
             ret, buffer = cv2.imencode('.jpg', frame)
