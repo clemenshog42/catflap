@@ -81,20 +81,23 @@ class StateMachine:
             
         # Determine global state based on remaining active tracks
         has_prey = False
-        has_clean_cat = False
+        # Only true if there's at least one cat; otherwise False
+        all_cats_clean = len(self.tracks) > 0 
         
         for track in self.tracks.values():
             if track.current_state == State.CAT_WITH_PREY:
                 has_prey = True
-            elif track.current_state == State.CAT_NO_PREY:
-                has_clean_cat = True
+                all_cats_clean = False
+            elif len(track.confidence_history) < 5:
+                # We need at least 5 frames of history to confirm a cat is actually clean
+                all_cats_clean = False
                 
         access_state = None
         if has_prey:
             # Immediate priority: deny access if any prey is present
             access_state = AccessState.DENIED
-        elif has_clean_cat:
-            # Safe to grant access if at least one clean cat is present and NO prey is present
+        elif all_cats_clean:
+            # Safe to grant access if ALL cats are clean and have been tracked for at least 5 frames
             access_state = AccessState.GRANTED
             
         # Only notify if we reached a conclusive state AND it's different from the last emitted state
