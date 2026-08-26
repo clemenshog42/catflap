@@ -66,8 +66,14 @@ class Catflap:
         """
         if self.picam2 is not None:
             # Native Picamera2 hardware loop
-            for request in self.picam2.capture_continuous(self.picam2.make_array("main")):
-                yield request.array
+            while True:
+                try:
+                    # capture_array() gets the latest numpy array from the stream
+                    image = self.picam2.capture_array("main")
+                    yield image
+                except Exception as e:
+                    print(f"[Catflap Sensor] Camera stopped: {e}")
+                    break
         elif self.cap is not None:
             # Standard OpenCV video/webcam loop
             while True:
