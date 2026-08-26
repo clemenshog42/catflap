@@ -12,16 +12,22 @@ def main(video_path, save_uncertain_dir=None):
         print(f"Error: Could not open video source {video_path}")
         return
 
-    frame_idx = 0
+    frame_idx = [0] # Use a list to allow mutation inside the closure
+
+    def on_access_state_changed(state):
+        print(f"[*] Frame {frame_idx[0]}: Access State Changed -> {state.value}!")
+
+    processor.state_machine.subscribe(on_access_state_changed)
+
     while True:
         ret, frame = cap.read()
         if not ret:
             break
             
-        frame_idx += 1
+        frame_idx[0] += 1
         
         # Process the frame (handles detection, classification, state machine, and drawing)
-        processor.process_frame(frame, frame_idx)
+        processor.process_frame(frame, frame_idx[0])
         
         # Display the frame
         cv2.imshow("Cat Flap Prey Detection", frame)

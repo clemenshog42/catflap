@@ -71,9 +71,16 @@ class CatFlapPipeline:
         x1, y1, x2, y2 = map(int, box)
         
         # Add asymmetrical padding (heavy on bottom for dangling prey)
-        pad_w = 15
-        pad_top = -10
-        pad_bottom = 30
+        if getattr(self, 'use_asymmetric_crop', True):
+            pad_w = 15
+            pad_top = -10
+            pad_bottom = 30
+        else:
+            # Symmetrisches Cropping als Baseline
+            pad_w = 10
+            pad_top = 10
+            pad_bottom = 10
+            
         x1 -= pad_w
         y1 -= pad_top
         x2 += pad_w
