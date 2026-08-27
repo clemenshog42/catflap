@@ -41,8 +41,6 @@ def main(save_uncertain_dir=None, headless=False, video_path=None, output_path=N
                 
             if not headless:
                 cv2.imshow("Cat Flap Prey Detection", frame)
-                if processor.latest_crop is not None:
-                    cv2.imshow("Prey Model Input", processor.latest_crop)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
     except KeyboardInterrupt:
