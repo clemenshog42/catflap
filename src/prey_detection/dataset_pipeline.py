@@ -82,7 +82,6 @@ def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=15
                     if apply_clahe:
                         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
                         crop_img = clahe.apply(crop_img)
-                    crop_img = cv2.cvtColor(crop_img, cv2.COLOR_GRAY2BGR)
                 else:
                     if apply_clahe:
                         lab = cv2.cvtColor(crop_img, cv2.COLOR_BGR2LAB)
@@ -154,7 +153,6 @@ def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=15
                     if apply_clahe:
                         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
                         crop_img = clahe.apply(crop_img)
-                    crop_img = cv2.cvtColor(crop_img, cv2.COLOR_GRAY2BGR)
                 else:
                     if apply_clahe:
                         lab = cv2.cvtColor(crop_img, cv2.COLOR_BGR2LAB)

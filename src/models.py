@@ -72,14 +72,14 @@ class CatFlapPipeline:
         
         # Add asymmetrical padding (heavy on bottom for dangling prey)
         if getattr(self, 'use_asymmetric_crop', True):
-            pad_w = 15
-            pad_top = -10
+            pad_w = 0
+            pad_top = 0
             pad_bottom = 30
         else:
             # Symmetrisches Cropping als Baseline
-            pad_w = 10
-            pad_top = 10
-            pad_bottom = 10
+            pad_w = 0
+            pad_top = 0
+            pad_bottom = 30
             
         x1 -= pad_w
         y1 -= pad_top
@@ -118,17 +118,15 @@ class CatFlapPipeline:
         )
         # ----------------------------
             
-        # Convert crop to grayscale, apply optional CLAHE, then back to 3-channel (g, g, g) as per training
+        # Convert crop to grayscale and apply optional CLAHE
         gray_crop = cv2.cvtColor(square_crop, cv2.COLOR_BGR2GRAY)
         
         if self.apply_clahe_classifier:
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
             gray_crop = clahe.apply(gray_crop)
             
-        gray_3ch_crop = cv2.cvtColor(gray_crop, cv2.COLOR_GRAY2BGR)
-            
-        # Run classifier on the crop
-        results = self.classifier(gray_3ch_crop, verbose=False)
+        # Run native 1-channel classifier on the crop
+        results = self.classifier(gray_crop, verbose=False)
         
         # Extract confidence for "prey"
         # Assuming the classifier has classes where one represents "prey" (e.g. class 1)
