@@ -45,7 +45,7 @@ def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=15
         if img is None:
             continue
             
-        results = crop_model(str(f), verbose=False)[0]
+        results = crop_model(str(f), verbose=False, conf=0.95)[0]
         if len(results.boxes) > 0:
             for box_idx, box in enumerate(results.boxes.xyxy.cpu().numpy()):
                 x1, y1, x2, y2 = map(int, box)
@@ -82,6 +82,7 @@ def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=15
                     if apply_clahe:
                         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
                         crop_img = clahe.apply(crop_img)
+                    crop_img = cv2.cvtColor(crop_img, cv2.COLOR_GRAY2BGR)
                 else:
                     if apply_clahe:
                         lab = cv2.cvtColor(crop_img, cv2.COLOR_BGR2LAB)
@@ -113,7 +114,7 @@ def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=15
         if img is None:
             continue
             
-        results = crop_model(str(f), verbose=False)[0]
+        results = crop_model(str(f), verbose=False, conf=0.95)[0]
         if len(results.boxes) > 0:
             for box_idx, box in enumerate(results.boxes.xyxy.cpu().numpy()):
                 if successful_clean_count >= successful_prey_count:
@@ -153,6 +154,7 @@ def process_and_split(prey_dir, clean_dir, output_dir, crop_model_path, pad_w=15
                     if apply_clahe:
                         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
                         crop_img = clahe.apply(crop_img)
+                    crop_img = cv2.cvtColor(crop_img, cv2.COLOR_GRAY2BGR)
                 else:
                     if apply_clahe:
                         lab = cv2.cvtColor(crop_img, cv2.COLOR_BGR2LAB)
