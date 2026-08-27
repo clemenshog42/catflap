@@ -21,10 +21,8 @@ def train_model(data_dir, epochs=50, imgsz=224, batch=16, project="clean_prey_yo
             fliplr=0.5,     # Safe: horizontally flip 50% of the time
             degrees=10.0,   # Safe: slight rotation to mimic head tilt
             translate=0.1,  # Safe: 10% translation for bounding box jitter
-            shear=2.0,      # Safe: slight shear for camera angles
+            shear=1.0,      # Safe: slight shear for camera angles
             scale=0.0,      # Crucial: NO zooming/cropping. Keeps prey in frame.
-            hsv_h=0.0,      # Safe: NO hue shift (grayscale)
-            hsv_s=0.0,      # Safe: NO saturation shift (grayscale)
             hsv_v=0.2,      # Brightness augmentation to handle varying lighting
             erasing=0.0,    # Disabled: user requested no random black boxes
             project=project,
