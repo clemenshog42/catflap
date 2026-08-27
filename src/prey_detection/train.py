@@ -16,7 +16,7 @@ def train_model(data_dir, epochs=50, imgsz=224, batch=16, project="clean_prey_yo
             imgsz=imgsz,
             batch=batch,
             device=device,
-            patience=40,
+            patience=10,
             # Safe Cherry-picked Augmentations
             fliplr=0.5,     # Safe: horizontally flip 50% of the time
             degrees=10.0,   # Safe: slight rotation to mimic head tilt
