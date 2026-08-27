@@ -2,11 +2,12 @@ import argparse
 import torch
 from ultralytics import YOLO
 
-def train_model(data_yaml, epochs=100, imgsz=640, batch=16, project="yolov11_catmouth"):
+def train_model(data_yaml, epochs=100, imgsz=640, batch=16, project="yolo26_catmouth"):
     device = 0 if torch.cuda.is_available() else "cpu"
     print(f"🚀 Starting model training on {device}...")
     
-    model = YOLO('yolo11n.pt')
+    # Pretrained YOLO26 Nano detection model
+    model = YOLO('yolo26n.pt')
     
     try:
         results = model.train(
@@ -17,6 +18,7 @@ def train_model(data_yaml, epochs=100, imgsz=640, batch=16, project="yolov11_cat
             device=device,
             patience=10,
             hsv_v=0.5, # Boost brightness augmentation for dark features
+            ch=1, # Native 1-channel grayscale support
             project=project,
             name="train",
             save=True,
@@ -35,7 +37,7 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--imgsz", type=int, default=640)
     parser.add_argument("--batch", type=int, default=16)
-    parser.add_argument("--project", default="yolov11_catmouth")
+    parser.add_argument("--project", default="yolo26_catmouth")
     
     args = parser.parse_args()
     train_model(args.data_yaml, args.epochs, args.imgsz, args.batch, args.project)
