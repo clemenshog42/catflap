@@ -18,13 +18,17 @@ class Catflap:
     Encapsulates both the locking mechanism (Servo) and the visual sensor (Camera/Video).
     """
     
-    def __init__(self, gpio_pin=17, lock_value=-1.0, unlock_value=1.0, video_source=None, simulate_servo=False):
+    def __init__(self, gpio_pin=17, lock_value=-1.0, unlock_value=1.0, video_source=None, simulate_servo=False, flip=False):
         """
         Initialize the Catflap.
         If video_source is None, it attempts to use the physical Raspberry Pi Camera (Picamera2).
         If video_source is a path (str) or integer, it uses cv2.VideoCapture (for mp4 files or webcams).
         If simulate_servo is True, it skips hardware PWM initialization and only prints lock states.
+        If flip is True, the camera feed is rotated 180 degrees.
         """
+        # --- Config ---
+        self.flip = flip
+        
         # --- Servo Lock Initialization ---
         self.gpio_pin = gpio_pin
         self.lock_value = lock_value
@@ -70,6 +74,8 @@ class Catflap:
                 try:
                     # capture_array() gets the latest numpy array from the stream
                     image = self.picam2.capture_array("main")
+                    if self.flip:
+                        image = cv2.flip(image, -1)
                     yield image
                 except Exception as e:
                     print(f"[Catflap Sensor] Camera stopped: {e}")
@@ -81,6 +87,8 @@ class Catflap:
                 if not ret:
                     print("[Catflap Sensor] End of video stream reached.")
                     break
+                if self.flip:
+                    frame = cv2.flip(frame, -1)
                 yield frame
 
     def get_video_properties(self):

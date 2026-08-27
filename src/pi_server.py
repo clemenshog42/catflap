@@ -173,11 +173,17 @@ if __name__ == "__main__":
     parser.add_argument("--gpio", type=int, default=17, help="GPIO pin for the servo")
     parser.add_argument("--video", type=str, default=None, help="Optional: Path to an input video file to use instead of the camera")
     parser.add_argument("--simulate-servo", action="store_true", help="Run without initializing the physical servo motor")
+    parser.add_argument("--flip", action="store_true", help="Flip the camera feed 180 degrees")
     args = parser.parse_args()
     
     # Initialize the central Catflap hardware
     try:
-        flap = Catflap(gpio_pin=args.gpio, video_source=args.video, simulate_servo=args.simulate_servo)
+        flap = Catflap(
+            gpio_pin=args.gpio, 
+            video_source=args.video, 
+            simulate_servo=args.simulate_servo,
+            flip=args.flip
+        )
     except RuntimeError as e:
         print(e)
         exit(1)
