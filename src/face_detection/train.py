@@ -18,7 +18,6 @@ def train_model(data_yaml, epochs=100, imgsz=640, batch=16, project="yolo26_catm
             device=device,
             patience=10,
             hsv_v=0.5, # Boost brightness augmentation for dark features
-            ch=1, # Native 1-channel grayscale support for detection
             project=project,
             name="train",
             save=True,
