@@ -26,6 +26,7 @@ def train_model(data_dir, epochs=50, imgsz=224, batch=16, project="clean_prey_yo
             hsv_h=0.0,      # Safe: NO hue shift (grayscale)
             hsv_s=0.0,      # Safe: NO saturation shift (grayscale)
             hsv_v=0.2,      # Brightness augmentation to handle varying lighting
+            erasing=0.0,    # Disabled: user requested no random black boxes
             project=project,
             name="train",
             cache=False
