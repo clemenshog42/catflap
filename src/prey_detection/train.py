@@ -17,14 +17,15 @@ def train_model(data_dir, epochs=50, imgsz=224, batch=16, project="clean_prey_yo
             batch=batch,
             device=device,
             patience=10,
-            ch=1,           # Native 1-channel grayscale support
             # Safe Cherry-picked Augmentations
             fliplr=0.5,     # Safe: horizontally flip 50% of the time
             degrees=10.0,   # Safe: slight rotation to mimic head tilt
+            translate=0.1,  # Safe: 10% translation for bounding box jitter
+            shear=2.0,      # Safe: slight shear for camera angles
             scale=0.0,      # Crucial: NO zooming/cropping. Keeps prey in frame.
-            hsv_h=0.0,      # Safe: NO hue shift
-            hsv_s=0.0,      # Safe: NO saturation shift
-            hsv_v=0.0,      # Crucial: NO brightness dropping (prevents pitch black)
+            hsv_h=0.0,      # Safe: NO hue shift (grayscale)
+            hsv_s=0.0,      # Safe: NO saturation shift (grayscale)
+            hsv_v=0.2,      # Brightness augmentation to handle varying lighting
             project=project,
             name="train",
             cache=False
