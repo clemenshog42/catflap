@@ -51,7 +51,7 @@ class CatFlapPipeline:
         # The CenterCrop square padding fix we applied below is robust enough to handle 
         # any minor tracking jitter without losing the prey!
         try:
-            results = self.detector.track(gray_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
+            results = self.detector.track(gray_frame, persist=True, tracker="bytetrack.yaml", conf=0.7, verbose=False)
             return results[0] # Return the first (and only) frame's results
         except ValueError as e:
             print(f"Tracking error (likely dimension mismatch): {e}")
