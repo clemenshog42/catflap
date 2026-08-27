@@ -51,7 +51,7 @@ class CatFlapPipeline:
         # The CenterCrop square padding fix we applied below is robust enough to handle 
         # any minor tracking jitter without losing the prey!
         try:
-            results = self.detector.track(gray_frame, persist=True, tracker="bytetrack.yaml", conf=0.7, verbose=False)
+            results = self.detector.track(gray_frame, persist=True, tracker="bytetrack.yaml", conf=0.6, verbose=False)
             return results[0] # Return the first (and only) frame's results
         except ValueError as e:
             print(f"Tracking error (likely dimension mismatch): {e}")
@@ -69,17 +69,19 @@ class CatFlapPipeline:
             return 0.0, None
             
         x1, y1, x2, y2 = map(int, box)
+        face_w = x2 - x1
+        face_h = y2 - y1
         
         # Add asymmetrical padding (heavy on bottom for dangling prey)
         if getattr(self, 'use_asymmetric_crop', True):
-            pad_w = 0
-            pad_top = 0
-            pad_bottom = 30
+            pad_w = int(face_w * 0.1)
+            pad_top = int(face_h * -0.05)
+            pad_bottom = int(face_h * 0.2)
         else:
             # Symmetrisches Cropping als Baseline
-            pad_w = 0
-            pad_top = 0
-            pad_bottom = 30
+            pad_w = int(face_w * 0.1)
+            pad_top = int(face_h * -0.05)
+            pad_bottom = int(face_h * 0.2)
             
         x1 -= pad_w
         y1 -= pad_top
