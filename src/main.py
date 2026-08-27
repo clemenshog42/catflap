@@ -31,6 +31,8 @@ def main(video_path, save_uncertain_dir=None):
         
         # Display the frame
         cv2.imshow("Cat Flap Prey Detection", frame)
+        if processor.latest_crop is not None:
+            cv2.imshow("Prey Model Input", processor.latest_crop)
         
         # Press 'q' to exit
         if cv2.waitKey(1) & 0xFF == ord('q'):
