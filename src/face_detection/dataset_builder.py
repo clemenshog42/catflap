@@ -15,7 +15,7 @@ def to_yolo_bbox(x1, y1, x2, y2, img_w, img_h):
     h = abs(y2 - y1) / img_h
     return x_center, y_center, w, h
 
-def build_dataset(input_dir, output_dir, source, model_path=None, color_mode="rgb", apply_clahe=False, splits=(0.8, 0.1, 0.1), class_id=0, class_name="cat_face"):
+def build_dataset(input_dir, output_dir, source, model_path=None, color_mode="rgb", apply_clahe=False, splits=(0.8, 0.1, 0.1), class_id=0, class_name="cat_face", pad_bottom=50):
     # Create directories
     for split in ["train", "val", "test"]:
         os.makedirs(os.path.join(output_dir, split, "images"), exist_ok=True)
@@ -99,7 +99,7 @@ def build_dataset(input_dir, output_dir, source, model_path=None, color_mode="rg
                         left_x = np.min(np.append(left_ear_pts[:, 0], mouth[0]))
                         right_x = np.max(np.append(right_ear_pts[:, 0], mouth[0]))
                         top_y = np.min(np.vstack((left_ear_pts, right_ear_pts))[:, 1])
-                        bottom_y = mouth[1] + 50
+                        bottom_y = mouth[1] + pad_bottom
                         
                         x_c, y_c, bw, bh = to_yolo_bbox(left_x, top_y, right_x, bottom_y, w, h)
                 except Exception:
@@ -145,6 +145,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_path", help="Path to YOLO model if source is 'model'")
     parser.add_argument("--color", choices=["rgb", "grayscale"], default="rgb", help="Color mode")
     parser.add_argument("--apply_clahe", action="store_true", help="Apply Contrast Limited Adaptive Histogram Equalization (CLAHE)")
+    parser.add_argument("--pad_bottom", type=int, default=50, help="Vertical padding (pixels) below the mouth")
     
     args = parser.parse_args()
-    build_dataset(args.input_dir, args.output_dir, args.source, args.model_path, args.color, args.apply_clahe)
+    build_dataset(args.input_dir, args.output_dir, args.source, args.model_path, args.color, args.apply_clahe, pad_bottom=args.pad_bottom)
