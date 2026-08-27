@@ -5,7 +5,7 @@ import random
 from pathlib import Path
 from ultralytics import YOLO
 
-def test_padding(input_dir, output_dir, crop_model_path, pad_w=10, pad_top=10, pad_bottom=30, num_samples=10, seed=42):
+def test_padding(input_dir, output_dir, crop_model_path, pad_w_ratio=0.1, pad_top_ratio=-0.05, pad_bottom_ratio=0.2, num_samples=10, seed=42):
     random.seed(seed)
     
     input_path = Path(input_dir)
@@ -43,11 +43,14 @@ def test_padding(input_dir, output_dir, crop_model_path, pad_w=10, pad_top=10, p
             img_drawn = img.copy()
             cv2.rectangle(img_drawn, (x1, y1), (x2, y2), (0, 0, 255), 2)
             
-            # Add padding
-            x1_pad = max(0, x1 - pad_w)
-            y1_pad = max(0, y1 - pad_top)
-            x2_pad = min(w, x2 + pad_w)
-            y2_pad = min(h, y2 + pad_bottom)
+            # Add proportional padding based on face size
+            face_w = x2 - x1
+            face_h = y2 - y1
+            
+            x1_pad = max(0, x1 - int(face_w * pad_w_ratio))
+            y1_pad = max(0, y1 - int(face_h * pad_top_ratio))
+            x2_pad = min(w, x2 + int(face_w * pad_w_ratio))
+            y2_pad = min(h, y2 + int(face_h * pad_bottom_ratio))
             
             # Ensure negative padding doesn't invert the crop
             y1_pad = min(y2_pad - 1, y1_pad)
@@ -88,10 +91,10 @@ if __name__ == "__main__":
     parser.add_argument("--input_dir", required=True, help="Input directory of sample images")
     parser.add_argument("--output_dir", required=True, help="Output directory for test visualizations")
     parser.add_argument("--crop_model_path", required=True, help="Path to YOLO cat face model")
-    parser.add_argument("--pad_w", type=int, default=10, help="Horizontal padding (pixels) to test")
-    parser.add_argument("--pad_top", type=int, default=10, help="Vertical padding above face to test")
-    parser.add_argument("--pad_bottom", type=int, default=30, help="Vertical padding below face to test")
+    parser.add_argument("--pad_w_ratio", type=float, default=0.1, help="Horizontal padding ratio")
+    parser.add_argument("--pad_top_ratio", type=float, default=-0.05, help="Vertical padding ratio above face")
+    parser.add_argument("--pad_bottom_ratio", type=float, default=0.2, help="Vertical padding ratio below face")
     parser.add_argument("--num_samples", type=int, default=10, help="Number of random samples to test")
     
     args = parser.parse_args()
-    test_padding(args.input_dir, args.output_dir, args.crop_model_path, args.pad_w, args.pad_top, args.pad_bottom, args.num_samples)
+    test_padding(args.input_dir, args.output_dir, args.crop_model_path, args.pad_w_ratio, args.pad_top_ratio, args.pad_bottom_ratio, args.num_samples)
