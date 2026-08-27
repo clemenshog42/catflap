@@ -6,7 +6,7 @@ from flask import Flask, Response, render_template_string, jsonify
 from flasgger import Swagger
 
 from processor import CatFlapProcessor
-from catflap import Catflap
+from catflap import SimulationCatflap, ServoCatflap
 from state_machine import State, AccessState
 
 app = Flask(__name__)
@@ -30,7 +30,7 @@ def schedule_auto_lock():
         auto_lock_timer.cancel()
         
     # Start a new 30 second timer
-    auto_lock_timer = threading.Timer(30.0, flap.lock)
+    auto_lock_timer = threading.Timer(30.0, flap.lock_in)
     auto_lock_timer.start()
 
 def on_access_state_changed(access_state):
@@ -39,12 +39,12 @@ def on_access_state_changed(access_state):
     
     if access_state == AccessState.GRANTED:
         print("[Event] Clean cat(s) detected. Unlocking flap for 30s.")
-        flap.unlock()
+        flap.unlock_in()
         schedule_auto_lock()
         
     elif access_state == AccessState.DENIED:
         print("[Event] Cat WITH PREY detected! Locking flap immediately.")
-        flap.lock()
+        flap.lock_in()
         # Cancel any pending auto-lock since we are locking immediately
         if auto_lock_timer is not None:
             auto_lock_timer.cancel()
@@ -92,7 +92,7 @@ def get_status():
             is_locked:
               type: boolean
     """
-    return jsonify({"is_locked": flap.is_locked})
+    return jsonify({"is_locked_in": flap.is_locked_in, "is_locked_out": flap.is_locked_out})
 
 @app.route('/api/lock', methods=['POST'])
 def lock_flap():
@@ -103,8 +103,8 @@ def lock_flap():
       200:
         description: Flap locked successfully
     """
-    flap.lock()
-    return jsonify({"status": "success", "is_locked": flap.is_locked})
+    flap.lock_in()
+    return jsonify({"status": "success", "is_locked_in": flap.is_locked_in})
 
 @app.route('/api/unlock', methods=['POST'])
 def unlock_flap():
@@ -115,9 +115,9 @@ def unlock_flap():
       200:
         description: Flap unlocked successfully
     """
-    flap.unlock()
+    flap.unlock_in()
     schedule_auto_lock()
-    return jsonify({"status": "success", "is_locked": flap.is_locked})
+    return jsonify({"status": "success", "is_locked_in": flap.is_locked_in})
 
 # --- Web UI ---
 
@@ -178,12 +178,10 @@ if __name__ == "__main__":
     
     # Initialize the central Catflap hardware
     try:
-        flap = Catflap(
-            gpio_pin=args.gpio, 
-            video_source=args.video, 
-            simulate_servo=args.simulate_servo,
-            flip=args.flip
-        )
+        if args.simulate_servo:
+            flap = SimulationCatflap(video_source=args.video, flip=args.flip)
+        else:
+            flap = ServoCatflap(gpio_pin=args.gpio, video_source=args.video, flip=args.flip)
     except RuntimeError as e:
         print(e)
         exit(1)

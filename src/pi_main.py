@@ -1,14 +1,17 @@
 import cv2
 import argparse
 from processor import CatFlapProcessor
-from catflap import Catflap
+from catflap import SimulationCatflap, ServoCatflap
 
 def main(save_uncertain_dir=None, headless=False, video_path=None, output_path=None, simulate_servo=False, flip=False):
     processor = CatFlapProcessor(save_uncertain_dir=save_uncertain_dir)
     
     # Initialize the central Catflap hardware (handles both the lock and the camera/video source)
     try:
-        flap = Catflap(video_source=video_path, simulate_servo=simulate_servo, flip=flip)
+        if simulate_servo:
+            flap = SimulationCatflap(video_source=video_path, flip=flip)
+        else:
+            flap = ServoCatflap(video_source=video_path, flip=flip)
     except RuntimeError as e:
         print(e)
         return
