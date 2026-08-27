@@ -66,7 +66,7 @@ class CatFlapPipeline:
         returns: float (confidence of 'prey')
         """
         if self.classifier is None:
-            return 0.0
+            return 0.0, None
             
         x1, y1, x2, y2 = map(int, box)
         
@@ -96,7 +96,7 @@ class CatFlapPipeline:
         crop = frame[y1:y2, x1:x2]
         
         if crop.size == 0:
-            return 0.0
+            return 0.0, None
             
         # --- SQUARE PADDING LOGIC ---
         # YOLO Classification forces a CenterCrop if the image is not a perfect square.
@@ -125,8 +125,10 @@ class CatFlapPipeline:
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
             gray_crop = clahe.apply(gray_crop)
             
-        # Run native 1-channel classifier on the crop
-        results = self.classifier(gray_crop, verbose=False)
+        gray_3ch_crop = cv2.cvtColor(gray_crop, cv2.COLOR_GRAY2BGR)
+            
+        # Run classifier on the crop
+        results = self.classifier(gray_3ch_crop, verbose=False)
         
         # Extract confidence for "prey"
         # Assuming the classifier has classes where one represents "prey" (e.g. class 1)
@@ -136,7 +138,7 @@ class CatFlapPipeline:
         
         # If probs is None, something went wrong with classification
         if probs is None:
-            return 0.0
+            return 0.0, None
             
         # Example: assuming class index 1 is "prey", and 0 is "no prey"
         # Update this index '1' based on your model's names: result.names
@@ -148,5 +150,5 @@ class CatFlapPipeline:
                 prey_class_idx = idx
                 break
                 
-        # Return the confidence of the prey class
-        return float(probs.data[prey_class_idx])
+        # Return the confidence of the prey class and the processed crop
+        return float(probs.data[prey_class_idx]), gray_3ch_crop

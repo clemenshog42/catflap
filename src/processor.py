@@ -33,14 +33,15 @@ class CatFlapProcessor:
         """Initializes the Cat Flap models, state machine, and configuration."""
         self.pipeline = CatFlapPipeline(
             detector_path="models/face_gray_float16.tflite",
-            classifier_path="models/best_prey_23_07_V5_openvino_model",
-            apply_clahe_detector=True,
+            classifier_path="models/prey_V7.pt",
+            apply_clahe_detector=False,
             apply_clahe_classifier=True
         )
-        self.state_machine = StateMachine(history_length=15, threshold=0.8, max_missed_frames=30)
+        self.state_machine = StateMachine(history_length=30, threshold=0.8, max_missed_frames=30)
         
         self.save_uncertain_dir = save_uncertain_dir
         self.last_saved_frame = {}
+        self.latest_crop = None
         
         # FPS Tracking
         import time
@@ -72,7 +73,9 @@ class CatFlapProcessor:
             
             for box, track_id in zip(boxes, track_ids):
                 # 3. Run Classification on the crop
-                prey_confidence = self.pipeline.run_classifier(frame, box)
+                prey_confidence, crop_img = self.pipeline.run_classifier(frame, box)
+                if crop_img is not None:
+                    self.latest_crop = crop_img
                 
                 # 4. Update State Machine
                 current_state = self.state_machine.update(track_id, prey_confidence, frame_idx)
