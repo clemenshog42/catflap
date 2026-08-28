@@ -3,7 +3,7 @@ import os
 from models import CatFlapPipeline
 from state_machine import StateMachine, State
 
-def draw_info(frame, box, track_id, state, prey_conf):
+def draw_info(frame, box, track_id, state, prey_conf, cat_conf):
     """Draws bounding box, ID, State, and Confidence on the frame."""
     x1, y1, x2, y2 = map(int, box)
     
@@ -19,7 +19,7 @@ def draw_info(frame, box, track_id, state, prey_conf):
     cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
     
     # Draw Label
-    label = f"ID: {track_id} | {state.value} | Prey: {prey_conf:.2f}"
+    label = f"ID: {track_id} | {state.value} | Cat: {cat_conf:.2f} | Prey: {prey_conf:.2f}"
     
     # Background for text
     (w, h), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
@@ -32,9 +32,9 @@ class CatFlapProcessor:
     def __init__(self, save_uncertain_dir=None):
         """Initializes the Cat Flap models, state machine, and configuration."""
         self.pipeline = CatFlapPipeline(
-            detector_path="models/cat_face_2708.pt",
-            classifier_path="models/best_V12.pt",
-            apply_clahe_detector=False,
+            detector_path="models/cat_face_2808_clahe.pt",
+            classifier_path="models/prey_V12.pt",
+            apply_clahe_detector=True,
             apply_clahe_classifier=True
         )
         self.state_machine = StateMachine(history_length=30, threshold=0.8, max_missed_frames=30)
@@ -70,8 +70,9 @@ class CatFlapProcessor:
                 track_ids = results.boxes.id.int().cpu().tolist()
             else:
                 track_ids = [0] * len(boxes)
+            confidences = results.boxes.conf.cpu().numpy()
             
-            for box, track_id in zip(boxes, track_ids):
+            for box, track_id, cat_conf in zip(boxes, track_ids, confidences):
                 # 3. Run Classification on the crop
                 prey_confidence, crop_img = self.pipeline.run_classifier(frame, box)
                 if crop_img is not None:
@@ -88,7 +89,7 @@ class CatFlapProcessor:
                         self.last_saved_frame[track_id] = frame_idx
                 
                 # Draw results on frame
-                draw_info(frame, box, track_id, current_state, prey_confidence)
+                draw_info(frame, box, track_id, current_state, prey_confidence, cat_conf)
                 
         # Clean up stale tracks and evaluate global flap state
         self.state_machine.process_global_state(frame_idx)
