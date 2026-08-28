@@ -14,7 +14,7 @@ def process_directory(img_paths, face_detector, class_id, apply_padding):
         if img is None: continue
         h, w = img.shape[:2]
         
-        results = face_detector(img, verbose=False)
+        # Graustufen und CLAHE für den Face Detector (falls er darauf trainiert ist)`n        gray_img_for_det = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)`n        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))`n        gray_img_for_det = clahe.apply(gray_img_for_det)`n        # Manche Modelle erwarten 3 Kanäle (RGB), andere 1 Kanal. Wir lassen YOLO das regeln.`n        # Wir konvertieren sicherheitshalber zurück zu 3 Kanälen falls YOLO das intern braucht (YOLO packt das meist in 3 Kanäle).`n        gray_3ch = cv2.cvtColor(gray_img_for_det, cv2.COLOR_GRAY2BGR)`n        results = face_detector(gray_3ch, verbose=False)
         boxes_to_save = []
         
         for r in results:
@@ -161,4 +161,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
