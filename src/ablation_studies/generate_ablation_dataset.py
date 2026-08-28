@@ -140,7 +140,7 @@ def main():
         
         save_name = f"auto_ann_{idx:06d}.jpg"
         dest_img_path = os.path.join(images_train, save_name)
-        shutil.copy(orig_img_path, dest_img_path)
+        img = cv2.imread(orig_img_path)`n        if img is not None:`n            gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)`n            # Optional: CLAHE anwenden (wie in der Baseline)`n            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))`n            gray_img = clahe.apply(gray_img)`n            cv2.imwrite(dest_img_path, gray_img)`n
         
         label_path = os.path.join(labels_train, save_name.replace('.jpg', '.txt'))
         with open(label_path, 'w') as f:
@@ -161,3 +161,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
