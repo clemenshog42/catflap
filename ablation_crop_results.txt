@@ -1,0 +1,49 @@
+Ablationsstudie: Asymmetrisches Zuschneiden (True vs False)
+============================================================
+
+KATEGORIE: NO_PREY
+------------------------------------------------------------
+Video: black.mp4 (240 Frames)
+  Mit asymmetrischem Cropping (Baseline):
+    - Fehler: 9 / 240 Katzen-Frames
+  Symmetrisches Cropping (Ablation):
+    - Fehler: 30 / 240 Katzen-Frames
+
+Video: orange.mp4 (240 Frames)
+  Mit asymmetrischem Cropping (Baseline):
+    - Fehler: 15 / 225 Katzen-Frames
+  Symmetrisches Cropping (Ablation):
+    - Fehler: 84 / 225 Katzen-Frames
+
+Video: two_cats.mp4 (240 Frames)
+  Mit asymmetrischem Cropping (Baseline):
+    - Fehler: 45 / 269 Katzen-Frames
+  Symmetrisches Cropping (Ablation):
+    - Fehler: 160 / 269 Katzen-Frames
+
+KATEGORIE: WITH_PREY
+------------------------------------------------------------
+Video: black.mp4 (240 Frames)
+  Mit asymmetrischem Cropping (Baseline):
+    - Fehler: 32 / 240 Katzen-Frames
+  Symmetrisches Cropping (Ablation):
+    - Fehler: 122 / 240 Katzen-Frames
+
+Video: orange.mp4 (164 Frames)
+  Mit asymmetrischem Cropping (Baseline):
+    - Fehler: 3 / 163 Katzen-Frames
+  Symmetrisches Cropping (Ablation):
+    - Fehler: 36 / 163 Katzen-Frames
+
+Video: orange2.mp4 (222 Frames)
+  Mit asymmetrischem Cropping (Baseline):
+    - Fehler: 0 / 223 Katzen-Frames
+  Symmetrisches Cropping (Ablation):
+    - Fehler: 40 / 223 Katzen-Frames
+
+Video: two_cats.mp4 (240 Frames)
+  Mit asymmetrischem Cropping (Baseline):
+    - Fehler: 15 / 259 Katzen-Frames
+  Symmetrisches Cropping (Ablation):
+    - Fehler: 99 / 259 Katzen-Frames
+

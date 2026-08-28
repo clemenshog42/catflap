@@ -1,0 +1,63 @@
+Ablationsstudie: Zustandsautomat (history_length 1 vs 15)
+============================================================
+
+KATEGORIE: NO_PREY
+------------------------------------------------------------
+Video: black.mp4 (240 Frames)
+  history_length=15 (Baseline):
+    - Anzahl Zustandswechsel: 2
+    - Klappe gesperrt?:       True (Korrekt? False)
+  history_length=1  (Ohne Glättung):
+    - Anzahl Zustandswechsel: 4
+    - Klappe gesperrt?:       True (Korrekt? False)
+
+Video: orange.mp4 (240 Frames)
+  history_length=15 (Baseline):
+    - Anzahl Zustandswechsel: 3
+    - Klappe gesperrt?:       True (Korrekt? False)
+  history_length=1  (Ohne Glättung):
+    - Anzahl Zustandswechsel: 7
+    - Klappe gesperrt?:       True (Korrekt? False)
+
+Video: two_cats.mp4 (240 Frames)
+  history_length=15 (Baseline):
+    - Anzahl Zustandswechsel: 7
+    - Klappe gesperrt?:       True (Korrekt? False)
+  history_length=1  (Ohne Glättung):
+    - Anzahl Zustandswechsel: 15
+    - Klappe gesperrt?:       True (Korrekt? False)
+
+KATEGORIE: WITH_PREY
+------------------------------------------------------------
+Video: black.mp4 (240 Frames)
+  history_length=15 (Baseline):
+    - Anzahl Zustandswechsel: 3
+    - Klappe gesperrt?:       True (Korrekt? True)
+  history_length=1  (Ohne Glättung):
+    - Anzahl Zustandswechsel: 11
+    - Klappe gesperrt?:       True (Korrekt? True)
+
+Video: orange.mp4 (164 Frames)
+  history_length=15 (Baseline):
+    - Anzahl Zustandswechsel: 1
+    - Klappe gesperrt?:       True (Korrekt? True)
+  history_length=1  (Ohne Glättung):
+    - Anzahl Zustandswechsel: 1
+    - Klappe gesperrt?:       True (Korrekt? True)
+
+Video: orange2.mp4 (222 Frames)
+  history_length=15 (Baseline):
+    - Anzahl Zustandswechsel: 1
+    - Klappe gesperrt?:       True (Korrekt? True)
+  history_length=1  (Ohne Glättung):
+    - Anzahl Zustandswechsel: 1
+    - Klappe gesperrt?:       True (Korrekt? True)
+
+Video: two_cats.mp4 (240 Frames)
+  history_length=15 (Baseline):
+    - Anzahl Zustandswechsel: 1
+    - Klappe gesperrt?:       True (Korrekt? True)
+  history_length=1  (Ohne Glättung):
+    - Anzahl Zustandswechsel: 3
+    - Klappe gesperrt?:       True (Korrekt? True)
+

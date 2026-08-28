@@ -1,0 +1,63 @@
+Ablationsstudie: CLAHE Filter Klassifikator (True vs False)
+============================================================
+
+KATEGORIE: NO_PREY
+------------------------------------------------------------
+Video: black.mp4 (240 Frames)
+  Mit CLAHE (Baseline):
+    - Anzahl Zustandswechsel: 6
+    - Klappe gesperrt?:       True (Korrekt? False)
+  Ohne CLAHE (Ablation):
+    - Anzahl Zustandswechsel: 10
+    - Klappe gesperrt?:       True (Korrekt? False)
+
+Video: orange.mp4 (240 Frames)
+  Mit CLAHE (Baseline):
+    - Anzahl Zustandswechsel: 7
+    - Klappe gesperrt?:       True (Korrekt? False)
+  Ohne CLAHE (Ablation):
+    - Anzahl Zustandswechsel: 3
+    - Klappe gesperrt?:       True (Korrekt? False)
+
+Video: two_cats.mp4 (1395 Frames)
+  Mit CLAHE (Baseline):
+    - Anzahl Zustandswechsel: 42
+    - Klappe gesperrt?:       True (Korrekt? False)
+  Ohne CLAHE (Ablation):
+    - Anzahl Zustandswechsel: 14
+    - Klappe gesperrt?:       True (Korrekt? False)
+
+KATEGORIE: WITH_PREY
+------------------------------------------------------------
+Video: black.mp4 (240 Frames)
+  Mit CLAHE (Baseline):
+    - Anzahl Zustandswechsel: 1
+    - Klappe gesperrt?:       True (Korrekt? True)
+  Ohne CLAHE (Ablation):
+    - Anzahl Zustandswechsel: 21
+    - Klappe gesperrt?:       True (Korrekt? True)
+
+Video: orange.mp4 (164 Frames)
+  Mit CLAHE (Baseline):
+    - Anzahl Zustandswechsel: 1
+    - Klappe gesperrt?:       True (Korrekt? True)
+  Ohne CLAHE (Ablation):
+    - Anzahl Zustandswechsel: 1
+    - Klappe gesperrt?:       True (Korrekt? True)
+
+Video: orange2.mp4 (222 Frames)
+  Mit CLAHE (Baseline):
+    - Anzahl Zustandswechsel: 1
+    - Klappe gesperrt?:       True (Korrekt? True)
+  Ohne CLAHE (Ablation):
+    - Anzahl Zustandswechsel: 1
+    - Klappe gesperrt?:       True (Korrekt? True)
+
+Video: two_cats.mp4 (240 Frames)
+  Mit CLAHE (Baseline):
+    - Anzahl Zustandswechsel: 1
+    - Klappe gesperrt?:       True (Korrekt? True)
+  Ohne CLAHE (Ablation):
+    - Anzahl Zustandswechsel: 1
+    - Klappe gesperrt?:       True (Korrekt? True)
+
