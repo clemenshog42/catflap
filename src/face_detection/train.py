@@ -16,7 +16,7 @@ def train_model(data_yaml, epochs=100, imgsz=640, batch=16, project="yolo26_catm
             imgsz=imgsz,
             batch=batch,
             device=device,
-            patience=10,
+            patience=20,
             hsv_v=0.5, # Boost brightness augmentation for dark features
             project=project,
             name="train",
