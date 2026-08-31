@@ -1,18 +1,26 @@
-import sys
+﻿import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-﻿import os
 import cv2
 import glob
 from processor import CatFlapProcessor
 from state_machine import StateMachine, AccessState
+from ultralytics import YOLO
 
 def run_evaluation(video_path, use_clahe):
     processor = CatFlapProcessor()
     
-    # We only toggle the CLAHE filter for the classifier
-    processor.pipeline.apply_clahe_classifier = use_clahe
-    
+    if use_clahe:
+        processor.pipeline.detector = YOLO(r"C:\Public\Studium\Bachelorarbeit\models\cat_face_clahe.pt")
+        processor.pipeline.classifier = YOLO(r"C:\Public\Studium\Bachelorarbeit\models\prey_clahe.pt")
+        processor.pipeline.apply_clahe_detector = True
+        processor.pipeline.apply_clahe_classifier = True
+    else:
+        processor.pipeline.detector = YOLO(r"C:\Public\Studium\Bachelorarbeit\models\cat_face_3108_colour.pt")
+        processor.pipeline.classifier = YOLO(r"C:\Public\Studium\Bachelorarbeit\models\prey_3108_colour.pt")
+        processor.pipeline.apply_clahe_detector = False
+        processor.pipeline.apply_clahe_classifier = False
+        
     # FORCE history_length=1 to isolate the effect of the classifier
     processor.state_machine = StateMachine(history_length=1, threshold=0.8, max_missed_frames=30)
     
@@ -29,16 +37,16 @@ def run_evaluation(video_path, use_clahe):
         state_changes += 1
         if state == AccessState.DENIED:
             denied_triggered = True
-
+            
     processor.state_machine.subscribe(on_state_change)
     
     frame_idx = 0
     while True:
         ret, frame = cap.read()
-        if not ret:
-            break
-        frame_idx += 1
+        if not ret: break
+        
         processor.process_frame(frame, frame_idx)
+        frame_idx += 1
         
     cap.release()
     
@@ -51,11 +59,10 @@ def run_evaluation(video_path, use_clahe):
 def main():
     base_dir = r"C:\Public\Studium\Bachelorarbeit\videos"
     categories = ["no_prey", "with_prey"]
-    
     results_file = r"C:\Public\Studium\Bachelorarbeit\ablation_clahe_results.txt"
     
     with open(results_file, "w", encoding="utf-8") as f:
-        f.write("Ablationsstudie: CLAHE Filter Klassifikator (True vs False)\n")
+        f.write("Ablationsstudie: Bedeutung des CLAHE-Filters (Grayscale vs Colour)\n")
         f.write("="*60 + "\n\n")
         
         for category in categories:
@@ -63,38 +70,31 @@ def main():
             f.write("-" * 60 + "\n")
             
             video_files = glob.glob(os.path.join(base_dir, category, "*.mp4"))
-            
             for video in video_files:
                 video_name = os.path.basename(video)
                 print(f"Verarbeite {video_name} in Kategorie {category}...")
                 
-                # Baseline (Mit CLAHE)
-                res_true = run_evaluation(video, use_clahe=True)
+                # Run with CLAHE (Baseline)
+                res_true = run_evaluation(video, True)
                 
-                # Ablation (Ohne CLAHE)
-                res_false = run_evaluation(video, use_clahe=False)
+                # Run without CLAHE (Colour Ablation)
+                res_false = run_evaluation(video, False)
                 
                 if res_true is None or res_false is None:
                     continue
-                    
-                if category == "no_prey":
-                    correct_true = not res_true["denied_triggered"]
-                    correct_false = not res_false["denied_triggered"]
-                else:
-                    correct_true = res_true["denied_triggered"]
-                    correct_false = res_false["denied_triggered"]
                 
                 f.write(f"Video: {video_name} ({res_true['total_frames']} Frames)\n")
-                f.write(f"  Mit CLAHE (Baseline):\n")
+                f.write(f"  Baseline (CLAHE + Grayscale):\n")
                 f.write(f"    - Anzahl Zustandswechsel: {res_true['state_changes']}\n")
-                f.write(f"    - Klappe gesperrt?:       {res_true['denied_triggered']} (Korrekt? {correct_true})\n")
-                
-                f.write(f"  Ohne CLAHE (Ablation):\n")
+                f.write(f"    - Klappe verriegelt: {'Ja' if res_true['denied_triggered'] else 'Nein'}\n")
+                f.write(f"  Ablation (Ohne CLAHE + Colour):\n")
                 f.write(f"    - Anzahl Zustandswechsel: {res_false['state_changes']}\n")
-                f.write(f"    - Klappe gesperrt?:       {res_false['denied_triggered']} (Korrekt? {correct_false})\n")
+                f.write(f"    - Klappe verriegelt: {'Ja' if res_false['denied_triggered'] else 'Nein'}\n")
                 f.write("\n")
                 
-    print(f"\nFertig! Die Auswertung wurde gespeichert in: {results_file}")
+    print(f"\nFertig! Auswertung gespeichert in: {results_file}")
 
 if __name__ == "__main__":
     main()
+
+

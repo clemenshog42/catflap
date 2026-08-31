@@ -1,4 +1,4 @@
-import cv2
+﻿import cv2
 import numpy as np
 import sys
 try:
@@ -12,10 +12,6 @@ from ultralytics import YOLO
 
 class CatFlapPipeline:
     def __init__(self, detector_path="path/to/cat_face_detector.pt", classifier_path="path/to/prey_classifier.pt", apply_clahe_detector=False, apply_clahe_classifier=True):
-        """
-        Initializes the YOLO models.
-        Currently using placeholders. Replace with actual paths when ready.
-        """
         self.apply_clahe_detector = apply_clahe_detector
         self.apply_clahe_classifier = apply_clahe_classifier
         print(f"Loading Object Detector from: {detector_path}")
@@ -33,38 +29,26 @@ class CatFlapPipeline:
             self.classifier = None
 
     def run_detector(self, frame):
-        """
-        Runs the cat face detector with ByteTrack.
-        Returns the ultralytics results object.
-        """
         if self.detector is None:
             return None
             
-        # Convert to grayscale as the model name suggests it expects 1-channel input
-        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        
         if self.apply_clahe_detector:
+            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
             gray_frame = clahe.apply(gray_frame)
+            # Make 3 channels just in case YOLOv11 expects it for RGB models acting on gray
+            # gray_frame = cv2.cvtColor(gray_frame, cv2.COLOR_GRAY2BGR)  # Removed to fix 1-channel model crash
+        else:
+            gray_frame = frame
         
-        # We re-enable ByteTrack here to preserve the track IDs for the State Machine.
-        # The CenterCrop square padding fix we applied below is robust enough to handle 
-        # any minor tracking jitter without losing the prey!
         try:
-            results = self.detector.track(gray_frame, persist=True, tracker="bytetrack.yaml", conf=0.6, verbose=False)
-            return results[0] # Return the first (and only) frame's results
+            results = self.detector.track(gray_frame, persist=True, tracker="bytetrack.yaml", conf=0.1, verbose=False)
+            return results[0] 
         except ValueError as e:
             print(f"Tracking error (likely dimension mismatch): {e}")
             return None
 
     def run_classifier(self, frame, box):
-        """
-        Extracts the region of interest (ROI) from the frame based on the bounding box,
-        and runs the prey classifier.
-        
-        box: [x1, y1, x2, y2]
-        returns: float (confidence of 'prey')
-        """
         if self.classifier is None:
             return 0.0, None
             
@@ -72,38 +56,30 @@ class CatFlapPipeline:
         face_w = x2 - x1
         face_h = y2 - y1
         
-        # Add asymmetrical padding (heavy on bottom for dangling prey)
         if getattr(self, 'use_asymmetric_crop', True):
-            pad_w = int(face_w * 0.1)
-            pad_top = int(face_h * -0.05)
-            pad_bottom = int(face_h * 0.2)
+            pad_w = int(face_w * 0)
+            pad_top = int(face_h * -0.35)
+            pad_bottom = int(face_h * 0.3)
         else:
-            # Symmetrisches Cropping als Baseline
-            pad_w = int(face_w * 0.1)
-            pad_top = int(face_h * -0.05)
-            pad_bottom = int(face_h * 0.2)
+            pad_w = int(face_w * 0)
+            pad_top = int(face_h * 0)
+            pad_bottom = int(face_h * 0)
             
         x1 -= pad_w
         y1 -= pad_top
         x2 += pad_w
         y2 += pad_bottom
         
-        # Ensure coordinates are within frame bounds and y1 is strictly less than y2
         h, w = frame.shape[:2]
         x1, y1 = max(0, x1), max(0, y1)
         x2, y2 = min(w, x2), min(h, y2)
         y1 = min(y2 - 1, y1)
         
-        # Crop the image
         crop = frame[y1:y2, x1:x2]
         
         if crop.size == 0:
             return 0.0, None
             
-        # --- SQUARE PADDING LOGIC ---
-        # YOLO Classification forces a CenterCrop if the image is not a perfect square.
-        # We must manually pad the crop with black pixels to make it a perfect square
-        # so the CenterCrop doesn't secretly chop off our asymmetrical dangling prey padding!
         ch, cw = crop.shape[:2]
         max_dim = max(ch, cw)
         
@@ -118,39 +94,32 @@ class CatFlapPipeline:
             cv2.BORDER_CONSTANT, 
             value=[0, 0, 0]
         )
-        # ----------------------------
-            
-        # Convert crop to grayscale and apply optional CLAHE
-        gray_crop = cv2.cvtColor(square_crop, cv2.COLOR_BGR2GRAY)
         
         if self.apply_clahe_classifier:
+            gray_crop = cv2.cvtColor(square_crop, cv2.COLOR_BGR2GRAY)
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
             gray_crop = clahe.apply(gray_crop)
+            final_crop = cv2.cvtColor(gray_crop, cv2.COLOR_GRAY2BGR)
+        else:
+            final_crop = square_crop
             
-        gray_3ch_crop = cv2.cvtColor(gray_crop, cv2.COLOR_GRAY2BGR)
-            
-        # Run classifier on the crop
-        results = self.classifier(gray_3ch_crop, verbose=False)
+        results = self.classifier(final_crop, verbose=False)
         
-        # Extract confidence for "prey"
-        # Assuming the classifier has classes where one represents "prey" (e.g. class 1)
-        # You may need to adjust the class index based on how your classifier was trained
         result = results[0]
         probs = result.probs
         
-        # If probs is None, something went wrong with classification
         if probs is None:
-            return 0.0, None
+            return 0.0, final_crop
             
-        # Example: assuming class index 1 is "prey", and 0 is "no prey"
-        # Update this index '1' based on your model's names: result.names
-        prey_class_idx = 1
-        
-        # Some models might have different class mappings. Let's find "prey" if possible:
-        for idx, name in result.names.items():
-            if name.lower() == 'prey':
-                prey_class_idx = idx
-                break
+        class_idx = 1
+        for i, name in result.names.items():
+            if 'with' in name.lower() or 'prey' in name.lower():
+                class_idx = i
                 
-        # Return the confidence of the prey class and the processed crop
-        return float(probs.data[prey_class_idx]), gray_3ch_crop
+        if probs.data.shape[0] > class_idx:
+            prey_conf = probs.data[class_idx].item()
+        else:
+            prey_conf = probs.top1conf.item() if ('with' in result.names[probs.top1].lower()) else 0.0
+            
+        return prey_conf, final_crop
+
