@@ -82,8 +82,8 @@ def main():
     
     print("Lade Modelle...")
     processor = CatFlapProcessor()
-    processor.pipeline.detector = YOLO(r"C:\Public\Studium\Bachelorarbeit\models\cat_face_clahe.pt")
-    processor.pipeline.classifier = YOLO(r"C:\Public\Studium\Bachelorarbeit\models\prey_clahe.pt")
+    processor.pipeline.detector = YOLO(r"C:\Public\Studium\Bachelorarbeit\models\cat_face_3108_colour.pt")
+    processor.pipeline.classifier = YOLO(r"C:\Public\Studium\Bachelorarbeit\models\prey_3108_colour.pt")
     
     detector_1stage = YOLO(r"C:\Public\Studium\Bachelorarbeit\models\1stage_ablation.pt")
     
@@ -118,4 +118,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

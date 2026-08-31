@@ -5,7 +5,7 @@ KATEGORIE: NO_PREY
 ------------------------------------------------------------
 Video: black.mp4 (240 Frames)
   Baseline (2-Stage):
-    - Beute-Fehler: 23 / 240
+    - Beute-Fehler: 30 / 240
     - Katze übersehen: 0 / 240
   Ablation (1-Stage):
     - Beute-Fehler: 86 / 240
@@ -13,16 +13,16 @@ Video: black.mp4 (240 Frames)
 
 Video: orange.mp4 (240 Frames)
   Baseline (2-Stage):
-    - Beute-Fehler: 23 / 240
-    - Katze übersehen: 15 / 240
+    - Beute-Fehler: 49 / 240
+    - Katze übersehen: 9 / 240
   Ablation (1-Stage):
     - Beute-Fehler: 33 / 240
     - Katze übersehen: 45 / 240
 
 Video: two_cats.mp4 (240 Frames)
   Baseline (2-Stage):
-    - Beute-Fehler: 69 / 240
-    - Katze übersehen: 29 / 240
+    - Beute-Fehler: 74 / 240
+    - Katze übersehen: 13 / 240
   Ablation (1-Stage):
     - Beute-Fehler: 144 / 240
     - Katze übersehen: 48 / 240
@@ -31,7 +31,7 @@ KATEGORIE: WITH_PREY
 ------------------------------------------------------------
 Video: black.mp4 (240 Frames)
   Baseline (2-Stage):
-    - Beute-Fehler: 19 / 240
+    - Beute-Fehler: 14 / 240
     - Katze übersehen: 0 / 240
   Ablation (1-Stage):
     - Beute-Fehler: 16 / 240
@@ -39,8 +39,8 @@ Video: black.mp4 (240 Frames)
 
 Video: orange.mp4 (164 Frames)
   Baseline (2-Stage):
-    - Beute-Fehler: 5 / 164
-    - Katze übersehen: 5 / 164
+    - Beute-Fehler: 1 / 164
+    - Katze übersehen: 1 / 164
   Ablation (1-Stage):
     - Beute-Fehler: 1 / 164
     - Katze übersehen: 1 / 164
