@@ -1,63 +1,40 @@
-Ablationsstudie: Bedeutung des CLAHE-Filters (Grayscale vs Colour)
+﻿Ablationsstudie: Bedeutung des CLAHE-Filters (Grayscale vs Colour)
 ============================================================
 
 KATEGORIE: NO_PREY
 ------------------------------------------------------------
-Video: black.mp4 (240 Frames)
-  Baseline (CLAHE + Grayscale):
-    - Anzahl Zustandswechsel: 3
-    - Klappe verriegelt: Ja
-  Ablation (Ohne CLAHE + Colour):
-    - Anzahl Zustandswechsel: 9
-    - Klappe verriegelt: Ja
-
-Video: orange.mp4 (240 Frames)
-  Baseline (CLAHE + Grayscale):
+Video: black_gray.mp4 (240 Frames)
+  Baseline (Mit CLAHE):
     - Anzahl Zustandswechsel: 5
     - Klappe verriegelt: Ja
-  Ablation (Ohne CLAHE + Colour):
-    - Anzahl Zustandswechsel: 5
+  Ablation (Ohne CLAHE):
+    - Anzahl Zustandswechsel: 14
     - Klappe verriegelt: Ja
 
-Video: two_cats.mp4 (240 Frames)
-  Baseline (CLAHE + Grayscale):
-    - Anzahl Zustandswechsel: 13
+Video: orange_gray.mp4 (240 Frames)
+  Baseline (Mit CLAHE):
+    - Anzahl Zustandswechsel: 18
     - Klappe verriegelt: Ja
-  Ablation (Ohne CLAHE + Colour):
-    - Anzahl Zustandswechsel: 15
+  Ablation (Ohne CLAHE):
+    - Anzahl Zustandswechsel: 16
     - Klappe verriegelt: Ja
 
 KATEGORIE: WITH_PREY
 ------------------------------------------------------------
-Video: black.mp4 (240 Frames)
-  Baseline (CLAHE + Grayscale):
-    - Anzahl Zustandswechsel: 15
+Video: black_gray.mp4 (240 Frames)
+  Baseline (Mit CLAHE):
+    - Anzahl Zustandswechsel: 19
     - Klappe verriegelt: Ja
-  Ablation (Ohne CLAHE + Colour):
+  Ablation (Ohne CLAHE):
     - Anzahl Zustandswechsel: 11
     - Klappe verriegelt: Ja
 
-Video: orange.mp4 (164 Frames)
-  Baseline (CLAHE + Grayscale):
+Video: orange_gray.mp4 (164 Frames)
+  Baseline (Mit CLAHE):
     - Anzahl Zustandswechsel: 1
     - Klappe verriegelt: Ja
-  Ablation (Ohne CLAHE + Colour):
-    - Anzahl Zustandswechsel: 1
-    - Klappe verriegelt: Ja
-
-Video: orange2.mp4 (222 Frames)
-  Baseline (CLAHE + Grayscale):
-    - Anzahl Zustandswechsel: 1
-    - Klappe verriegelt: Ja
-  Ablation (Ohne CLAHE + Colour):
+  Ablation (Ohne CLAHE):
     - Anzahl Zustandswechsel: 3
     - Klappe verriegelt: Ja
 
-Video: two_cats.mp4 (240 Frames)
-  Baseline (CLAHE + Grayscale):
-    - Anzahl Zustandswechsel: 9
-    - Klappe verriegelt: Ja
-  Ablation (Ohne CLAHE + Colour):
-    - Anzahl Zustandswechsel: 1
-    - Klappe verriegelt: Ja
 

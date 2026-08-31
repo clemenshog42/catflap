@@ -16,8 +16,8 @@ def run_evaluation(video_path, use_clahe):
         processor.pipeline.apply_clahe_detector = True
         processor.pipeline.apply_clahe_classifier = True
     else:
-        processor.pipeline.detector = YOLO(r"C:\Public\Studium\Bachelorarbeit\models\cat_face_3108_colour.pt")
-        processor.pipeline.classifier = YOLO(r"C:\Public\Studium\Bachelorarbeit\models\prey_3108_colour.pt")
+        processor.pipeline.detector = YOLO(r"C:\Public\Studium\Bachelorarbeit\models\cat_face.pt")
+        processor.pipeline.classifier = YOLO(r"C:\Public\Studium\Bachelorarbeit\models\prey.pt")
         processor.pipeline.apply_clahe_detector = False
         processor.pipeline.apply_clahe_classifier = False
         
@@ -62,14 +62,14 @@ def main():
     results_file = r"C:\Public\Studium\Bachelorarbeit\ablation_clahe_results.txt"
     
     with open(results_file, "w", encoding="utf-8") as f:
-        f.write("Ablationsstudie: Bedeutung des CLAHE-Filters (Grayscale vs Colour)\n")
+        f.write("Ablationsstudie: Bedeutung des CLAHE-Filters\n")
         f.write("="*60 + "\n\n")
         
         for category in categories:
             f.write(f"KATEGORIE: {category.upper()}\n")
             f.write("-" * 60 + "\n")
             
-            video_files = glob.glob(os.path.join(base_dir, category, "*.mp4"))
+            video_files = glob.glob(os.path.join(base_dir, category, "*_gray.mp4"))
             for video in video_files:
                 video_name = os.path.basename(video)
                 print(f"Verarbeite {video_name} in Kategorie {category}...")
@@ -84,10 +84,10 @@ def main():
                     continue
                 
                 f.write(f"Video: {video_name} ({res_true['total_frames']} Frames)\n")
-                f.write(f"  Baseline (CLAHE + Grayscale):\n")
+                f.write(f"  Baseline (Mit CLAHE):\n")
                 f.write(f"    - Anzahl Zustandswechsel: {res_true['state_changes']}\n")
                 f.write(f"    - Klappe verriegelt: {'Ja' if res_true['denied_triggered'] else 'Nein'}\n")
-                f.write(f"  Ablation (Ohne CLAHE + Colour):\n")
+                f.write(f"  Ablation (Ohne CLAHE):\n")
                 f.write(f"    - Anzahl Zustandswechsel: {res_false['state_changes']}\n")
                 f.write(f"    - Klappe verriegelt: {'Ja' if res_false['denied_triggered'] else 'Nein'}\n")
                 f.write("\n")
@@ -96,5 +96,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
 
 
