@@ -175,20 +175,19 @@ Hier wird ganz schnell klar, ohne die Randerweiterung fÃ¤ngt das System an zu 
     \label{fig:ablation_crop}
 \end{figure}
 
-\subsection{Ablationsstudie: KontrastverstÃ¤rkung (CLAHE) im Klassifikator}
-Da Infrarotkameras in der Nacht hÃ¤ufig kontrastarme Bilder liefern, wurde ein CLAHE-Filter (Contrast Limited Adaptive Histogram Equalization) in die Verarbeitungspipeline des Klassifikators integriert. Der Objektdetektor nutzt diesen Filter nicht, da er auf den originalen Graustufenbildern bereits ausreichend gut generalisiert. Um den Nutzen des Filters fÃ¼r die Klassifikation zu verifizieren, wurde eine dritte Ablationsstudie durchgefÃ¼hrt.
+\subsubsection{Ablationsstudie: Kontrastverstärkung (CLAHE) im Klassifikator}
+Um den Effekt unter realistischen Bedingungen zu isolieren, wurden die Farbbilder der Testvideos in Graustufen konvertiert, um die Infrarotaufnahme einer echten Katzenklappe zu simulieren. Die Ergebnisse (siehe Abbildung \ref{fig:ablation_clahe}) zeigen, dass der CLAHE-Filter kein universelles Wundermittel ist, sondern einen interessanten Kompromiss darstellt.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{images/ablation_clahe_state_changes.png}
-    \caption{Vergleich der normalisierten Zustandswechsel bei Videos \emph{mit Beute} mit und ohne CLAHE-Filter im Klassifikator.}
+    \caption{Vergleich der normalisierten Zustandswechsel bei Videos \emph{mit Beute} mit und ohne CLAHE-Filter im Klassifikator auf Graustufenbildern.}
     \label{fig:ablation_clahe}
 \end{figure}
 
-Die Ergebnisse (siehe Abbildung \ref{fig:ablation_clahe}) zeigen, dass der Filter bei Katzen ohne Beute kaum einen Unterschied macht (die Fehlalarmquote bleibt nahezu identisch). Einen massiven Einfluss hat der Filter jedoch bei Videos \emph{mit Beute} unter schwierigen Lichtbedingungen.
+Bei den Testvideos \emph{ohne Beute} reduziert der CLAHE-Filter das unerwünschte Flackern und die Fehlalarme bei schwierigen Kontrasten signifikant (z.\,B. bei \texttt{black\_gray.mp4} von 14 auf 5 Zustandswechsel). Paradoxerweise kehrt sich dieser Effekt bei den Videos \emph{mit Beute} teilweise um: Hier war das Modell ohne künstliche Kontrastverstärkung deutlich stabiler (11 statt 19 Zustandswechsel bei \texttt{black\_gray.mp4}). Es ist davon auszugehen, dass der harte CLAHE-Filter zwar die Umrisse schwarzer Katzen besser vom Hintergrund abhebt, aber gleichzeitig die feinen Texturen der Beute im Maul der Katze überzeichnet und so die Konfidenz des Klassifikators bei der Beuteerkennung schwächt.
 
-Besonders beim Testvideo \texttt{black.mp4} (schwarze Katze in der Nacht, die eine Beute im Maul trÃ¤gt) wird der Unterschied deutlich: Mit aktiviertem CLAHE-Filter (Baseline) erkennt das System die Beute sofort und verriegelt die Klappe mit genau 1 Zustandswechsel dauerhaft. Ohne den CLAHE-Filter (Ablation) stieg die Rate auf Ã¼ber 2 Zustandswechsel pro 100 Frames an (insgesamt 5 Wechsel im kurzen Clip). Das bedeutet, dass das System die Klappe verriegelte, sie kurz darauf wieder entriegelte und wieder verriegelte (ein stÃ¤ndiges \glqq Flackern\grqq). Der Klassifikator verlor ohne den erhÃ¶hten Kontrast mehrfach die Konfidenz in die Erkennung der Beute, was im realen Einsatz dazu fÃ¼hren kÃ¶nnte, dass die Katze im falschen Moment doch mit der Maus das Haus betritt. Der CLAHE-Filter ist somit ein kritischer Baustein fÃ¼r die StabilitÃ¤t des Systems bei Nachtaufnahmen.
-
+Da der nachgeschaltete Zustandsautomat (vgl. Kapitel \ref{sec:analysen_zustand}) ohnehin jegliches Flackern zuverlässig glättet, kann geschlussfolgert werden, dass der ressourcenintensive CLAHE-Filter für dieses spezifische Problem nicht zwingend erforderlich ist und das reine Infrarot-Graustufenbild für eine zuverlässige Klassifikation ausreicht.
 
 \subsubsection{Ablationsstudie: 1-Stage (Objektdetektor) vs. 2-Stage (Pipeline)}
 Um die Architektur unserer 2-Stage-Pipeline (Face-Detektor + ResNet/MobileNet-Klassifikator) zu validieren, wurde in einer Ablationsstudie ein reiner 1-Stage-Objektdetektor (YOLOv11n) auf die Erkennung von Katzen mit und ohne Beute trainiert. Der Datensatz wurde automatisch durch das Baseline-System generiert und exakt 50:50 balanciert, wobei die Bounding-Box f\"ur Beute-Klassen um das asymmetrische Padding erweitert wurde.
