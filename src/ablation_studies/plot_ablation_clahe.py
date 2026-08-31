@@ -21,7 +21,7 @@ while i < len(lines):
     if line.startswith('Video: '):
         match = re.match(r'Video: (.*) \((\d+) Frames\)', line)
         if match:
-            v_name = match.group(1).replace('.mp4', '').replace('_gray', '')
+            v_name = match.group(1).replace('_gray', '')
             f_count = int(match.group(2))
             
             # Baseline is next
@@ -75,3 +75,4 @@ ax.set_ylim(0, max_val + 2.0)
 fig.tight_layout()
 plt.savefig(r'C:\Public\Studium\Bachelorarbeit\images\ablation_clahe_state_changes.png', dpi=300, bbox_inches='tight')
 print("CLAHE plot successfully generated from file!")
+
