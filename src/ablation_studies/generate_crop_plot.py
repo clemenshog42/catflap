@@ -57,10 +57,10 @@ x = np.arange(len(labels))
 width = 0.35
 
 fig, ax = plt.subplots(figsize=(12, 6))
-rects1 = ax.bar(x - width/2, a_norm, width, label='Symmetrisches Padding', color='#ff7f0e')
-rects2 = ax.bar(x + width/2, b_norm, width, label='Asymmetrisches Padding (Baseline)', color='#1f77b4')
+rects1 = ax.bar(x - width/2, a_norm, width, label='Symmetrisches Zuschneiden', color='#ff7f0e')
+rects2 = ax.bar(x + width/2, b_norm, width, label='Asymmetrisches Zuschneiden (Baseline)', color='#1f77b4')
 
-ax.set_ylabel('Fehlerhafte Vorhersagen (pro 100 Frames)')
+ax.set_ylabel('Fehlerhafte Vorhersagen (pro 100 Bilder)')
 ax.set_title('Einfluss des Paddings auf die Modellgenauigkeit')
 ax.set_xticks(x)
 ax.set_xticklabels(labels, rotation=45, ha="right")
@@ -77,3 +77,4 @@ plt.savefig(r'C:\Public\Studium\Bachelorarbeit\images\ablation_crop_state_change
 plt.close(fig)
 
 print("Plot generated successfully!")
+

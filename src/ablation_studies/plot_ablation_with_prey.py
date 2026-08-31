@@ -19,7 +19,7 @@ fig, ax = plt.subplots(figsize=(8, 5))
 rects1 = ax.bar(x - width/2, ablation, width, label='Ohne Glättung (history=1)', color='#ff7f0e')
 rects2 = ax.bar(x + width/2, baseline, width, label='Mit Zustandsautomat (history=15)', color='#1f77b4')
 
-ax.set_ylabel('Zustandswechsel (pro 100 Frames)')
+ax.set_ylabel('Zustandswechsel (pro 100 Bilder)')
 ax.set_title('Auswirkung der zeitlichen Glättung auf True Positives (Normalisiert)')
 ax.set_xticks(x)
 ax.set_xticklabels(labels)

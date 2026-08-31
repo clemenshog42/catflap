@@ -34,7 +34,7 @@ while i < len(lines):
             b_cat_match = re.search(r'Katze übersehen: (\d+) /', lines[i])
             b_cat_miss = int(b_cat_match.group(1))
             
-            # 1-Stage
+            # 1-stufig
             while not 'Ablation (1-Stage)' in lines[i]: i += 1
             i += 1
             a_prey_match = re.search(r'Beute-Fehler: (\d+) /', lines[i])
@@ -69,10 +69,10 @@ width = 0.35
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 12))
 
 # Subplot 1: Beute-Fehler
-rects1_b = ax1.bar(x - width/2, b_prey_norm, width, label='2-Stage (Baseline)', color='#1f77b4')
-rects1_a = ax1.bar(x + width/2, a_prey_norm, width, label='1-Stage (Ablation)', color='#ff7f0e')
+rects1_b = ax1.bar(x - width/2, b_prey_norm, width, label='2-stufig (Baseline)', color='#1f77b4')
+rects1_a = ax1.bar(x + width/2, a_prey_norm, width, label='1-stufig (Ablation)', color='#ff7f0e')
 
-ax1.set_ylabel('Fehlentscheidungen (pro 100 Frames)')
+ax1.set_ylabel('Fehlentscheidungen (pro 100 Bilder)')
 ax1.set_title('Beute-Erkennung: Fehlerhafte Klassifikationen')
 ax1.set_xticks(x)
 ax1.set_xticklabels(labels, rotation=45, ha="right")
@@ -83,10 +83,10 @@ max_val1 = max(max(b_prey_norm) if b_prey_norm else 0, max(a_prey_norm) if a_pre
 ax1.set_ylim(0, max_val1 * 1.2 + 1.0)
 
 # Subplot 2: Verpasste Katzen
-rects2_b = ax2.bar(x - width/2, b_cat_norm, width, label='2-Stage (Baseline)', color='#1f77b4')
-rects2_a = ax2.bar(x + width/2, a_cat_norm, width, label='1-Stage (Ablation)', color='#ff7f0e')
+rects2_b = ax2.bar(x - width/2, b_cat_norm, width, label='2-stufig (Baseline)', color='#1f77b4')
+rects2_a = ax2.bar(x + width/2, a_cat_norm, width, label='1-stufig (Ablation)', color='#ff7f0e')
 
-ax2.set_ylabel('Übersehene Katzen (pro 100 Frames)')
+ax2.set_ylabel('Übersehene Katzen (pro 100 Bilder)')
 ax2.set_title('Katzen-Detektion: Komplett verpasste Katzen (False Negatives)')
 ax2.set_xticks(x)
 ax2.set_xticklabels(labels, rotation=45, ha="right")
@@ -100,3 +100,4 @@ fig.tight_layout()
 plt.savefig(r'C:\Public\Studium\Bachelorarbeit\images\ablation_1stage_evaluation.png', dpi=300)
 plt.close(fig)
 print("Plot generated successfully!")
+

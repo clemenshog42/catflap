@@ -51,7 +51,7 @@ def process_directory(img_paths, face_detector, class_id, apply_padding):
     return results_list
 
 def main():
-    parser = argparse.ArgumentParser(description='Auto-Annotate 1-Stage Detector Dataset')
+    parser = argparse.ArgumentParser(description='Auto-Annotate 1-stufig Detector Dataset')
     
     # Standard-Werte für lokale Ausführung hinzugefügt
     default_base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

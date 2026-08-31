@@ -19,7 +19,7 @@ rects1 = ax.bar(x - width/2, ablation, width, label='Ohne Randerweiterung (Ablat
 rects2 = ax.bar(x + width/2, baseline, width, label='Nur nach unten (Baseline)', color='#2ca02c')
 
 # Add some text for labels, title and custom x-axis tick labels, etc.
-ax.set_ylabel('Zustandswechsel (pro 100 Frames)')
+ax.set_ylabel('Zustandswechsel (pro 100 Bilder)')
 ax.set_title('Auswirkung der Randerweiterung nach unten (ohne Automaten)')
 ax.set_xticks(x)
 ax.set_xticklabels(labels)

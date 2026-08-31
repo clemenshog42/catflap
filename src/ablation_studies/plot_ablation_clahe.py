@@ -19,7 +19,7 @@ rects1 = ax.bar(x - width/2, ablation, width, label='Ohne CLAHE (Ablation)', col
 rects2 = ax.bar(x + width/2, baseline, width, label='Mit CLAHE (Baseline)', color='#17becf')
 
 # Add some text for labels, title and custom x-axis tick labels, etc.
-ax.set_ylabel('Zustandswechsel (pro 100 Frames)')
+ax.set_ylabel('Zustandswechsel (pro 100 Bilder)')
 ax.set_title('Auswirkung des CLAHE Filters (ohne Automaten)')
 ax.set_xticks(x)
 ax.set_xticklabels(labels)

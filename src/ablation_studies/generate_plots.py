@@ -61,7 +61,7 @@ def make_plot(data, title, out_path, color_ab, color_base):
     rects1 = ax.bar(x - width/2, a_norm, width, label='Ohne Glättung (history=1)', color=color_ab)
     rects2 = ax.bar(x + width/2, b_norm, width, label='Mit Zustandsautomat (history=15)', color=color_base)
     
-    ax.set_ylabel('Zustandswechsel (pro 100 Frames)')
+    ax.set_ylabel('Zustandswechsel (pro 100 Bilder)')
     ax.set_title(title)
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
