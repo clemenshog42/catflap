@@ -15,7 +15,7 @@ def to_yolo_bbox(x1, y1, x2, y2, img_w, img_h):
     h = abs(y2 - y1) / img_h
     return x_center, y_center, w, h
 
-def build_dataset(input_dir, output_dir, source, model_path=None, color_mode="rgb", apply_clahe=False, splits=(0.8, 0.1, 0.1), class_id=0, class_name="cat_face", pad_bottom=50, pt_bottom=2, pt_left_top=5, pt_right_top=8):
+def build_dataset(input_dir, output_dir, source, model_path=None, color_mode="rgb", apply_clahe=False, splits=(0.8, 0.1, 0.1), class_id=0, class_name="cat_face", pad_top_ratio=0.0, pad_bottom_ratio=0.2, pt_bottom=2, pt_left_top=5, pt_right_top=8):
     # Create directories
     for split in ["train", "val", "test"]:
         os.makedirs(os.path.join(output_dir, split, "images"), exist_ok=True)
@@ -99,7 +99,15 @@ def build_dataset(input_dir, output_dir, source, model_path=None, color_mode="rg
                         left_x = min(left_ear[0], mouth[0])
                         right_x = max(right_ear[0], mouth[0])
                         top_y = min(left_ear[1], right_ear[1])
-                        bottom_y = mouth[1] + pad_bottom
+                        
+                        # Calculate face height and apply proportional padding
+                        face_h = mouth[1] - top_y
+                        top_y = max(0, top_y - face_h * pad_top_ratio)
+                        bottom_y = min(h, mouth[1] + face_h * pad_bottom_ratio)
+                        
+                        # Ensure boundaries are within image
+                        left_x = max(0, left_x)
+                        right_x = min(w, right_x)
                         
                         x_c, y_c, bw, bh = to_yolo_bbox(left_x, top_y, right_x, bottom_y, w, h)
                 except Exception:
@@ -145,10 +153,11 @@ if __name__ == "__main__":
     parser.add_argument("--model_path", help="Path to YOLO model if source is 'model'")
     parser.add_argument("--color", choices=["rgb", "grayscale"], default="rgb", help="Color mode")
     parser.add_argument("--apply_clahe", action="store_true", help="Apply Contrast Limited Adaptive Histogram Equalization (CLAHE)")
-    parser.add_argument("--pad_bottom", type=int, default=50, help="Vertical padding (pixels) below the mouth")
+    parser.add_argument("--pad_top_ratio", type=float, default=0.0, help="Vertical padding ratio above the ears (default: 0.0)")
+    parser.add_argument("--pad_bottom_ratio", type=float, default=0.2, help="Vertical padding ratio below the mouth (default: 0.2)")
     parser.add_argument("--pt_bottom", type=int, default=2, help="Index of the point for the bottom boundary (default: 2 / Mouth)")
     parser.add_argument("--pt_left_top", type=int, default=5, help="Index of the point for the left and top boundary (default: 5 / Left Ear 3)")
     parser.add_argument("--pt_right_top", type=int, default=8, help="Index of the point for the right and top boundary (default: 8 / Right Ear 3)")
     
     args = parser.parse_args()
-    build_dataset(args.input_dir, args.output_dir, args.source, args.model_path, args.color, args.apply_clahe, pad_bottom=args.pad_bottom, pt_bottom=args.pt_bottom, pt_left_top=args.pt_left_top, pt_right_top=args.pt_right_top)
+    build_dataset(args.input_dir, args.output_dir, args.source, args.model_path, args.color, args.apply_clahe, pad_top_ratio=args.pad_top_ratio, pad_bottom_ratio=args.pad_bottom_ratio, pt_bottom=args.pt_bottom, pt_left_top=args.pt_left_top, pt_right_top=args.pt_right_top)
