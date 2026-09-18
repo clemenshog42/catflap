@@ -93,12 +93,12 @@ def build_dataset(input_dir, output_dir, source, model_path=None, color_mode="rg
                     coords = np.array(data[1:]).reshape(-1, 2)
                     if len(coords) == 9:
                         mouth = coords[2]
-                        left_ear_pts = coords[3:6]
-                        right_ear_pts = coords[6:9]
+                        left_ear_3 = coords[5]
+                        right_ear_3 = coords[8]
 
-                        left_x = np.min(np.append(left_ear_pts[:, 0], mouth[0]))
-                        right_x = np.max(np.append(right_ear_pts[:, 0], mouth[0]))
-                        top_y = np.min(np.vstack((left_ear_pts, right_ear_pts))[:, 1])
+                        left_x = min(left_ear_3[0], mouth[0])
+                        right_x = max(right_ear_3[0], mouth[0])
+                        top_y = min(left_ear_3[1], right_ear_3[1])
                         bottom_y = mouth[1] + pad_bottom
                         
                         x_c, y_c, bw, bh = to_yolo_bbox(left_x, top_y, right_x, bottom_y, w, h)
