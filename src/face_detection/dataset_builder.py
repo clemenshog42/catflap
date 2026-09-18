@@ -92,18 +92,25 @@ def build_dataset(input_dir, output_dir, source, model_path=None, color_mode="rg
                         data = list(map(int, f.read().split()))
                     coords = np.array(data[1:]).reshape(-1, 2)
                     if len(coords) == 9:
-                        mouth = coords[pt_bottom]
-                        left_ear = coords[pt_left_top]
-                        right_ear = coords[pt_right_top]
-
-                        left_x = min(left_ear[0], mouth[0])
-                        right_x = max(right_ear[0], mouth[0])
-                        top_y = min(left_ear[1], right_ear[1])
+                        # Define the points we want to wrap (Eyes, Mouth, and our configured Ear points)
+                        # 0: Left Eye, 1: Right Eye
+                        safe_points = np.array([
+                            coords[0], 
+                            coords[1], 
+                            coords[pt_bottom], 
+                            coords[pt_left_top], 
+                            coords[pt_right_top]
+                        ])
+                        
+                        left_x = np.min(safe_points[:, 0])
+                        right_x = np.max(safe_points[:, 0])
+                        top_y = np.min(safe_points[:, 1])
+                        base_bottom_y = np.max(safe_points[:, 1])
                         
                         # Calculate face height and apply proportional padding
-                        face_h = mouth[1] - top_y
-                        top_y = max(0, top_y - face_h * pad_top_ratio)
-                        bottom_y = min(h, mouth[1] + face_h * pad_bottom_ratio)
+                        face_h = base_bottom_y - top_y
+                        top_y = max(0, int(top_y - face_h * pad_top_ratio))
+                        bottom_y = min(h, int(base_bottom_y + face_h * pad_bottom_ratio))
                         
                         # Ensure boundaries are within image
                         left_x = max(0, left_x)
