@@ -15,7 +15,7 @@ def to_yolo_bbox(x1, y1, x2, y2, img_w, img_h):
     h = abs(y2 - y1) / img_h
     return x_center, y_center, w, h
 
-def build_dataset(input_dir, output_dir, source, model_path=None, color_mode="rgb", apply_clahe=False, splits=(0.8, 0.1, 0.1), class_id=0, class_name="cat_face", pad_top_ratio=0.0, pad_bottom_ratio=0.2, pt_bottom=2, pt_left_top=5, pt_right_top=8):
+def build_dataset(input_dir, output_dir, source, model_path=None, color_mode="rgb", apply_clahe=False, splits=(0.8, 0.1, 0.1), class_id=0, class_name="cat_face", pad_w_ratio=0.0, pad_top_ratio=0.0, pad_bottom_ratio=0.2, pt_bottom=2, pt_left_top=5, pt_right_top=8):
     # Create directories
     for split in ["train", "val", "test"]:
         os.makedirs(os.path.join(output_dir, split, "images"), exist_ok=True)
@@ -107,14 +107,14 @@ def build_dataset(input_dir, output_dir, source, model_path=None, color_mode="rg
                         top_y = np.min(safe_points[:, 1])
                         base_bottom_y = np.max(safe_points[:, 1])
                         
-                        # Calculate face height and apply proportional padding
+                        # Calculate face dimensions and apply proportional padding
+                        face_w = right_x - left_x
                         face_h = base_bottom_y - top_y
+                        
+                        left_x = max(0, int(left_x - face_w * pad_w_ratio))
+                        right_x = min(w, int(right_x + face_w * pad_w_ratio))
                         top_y = max(0, int(top_y - face_h * pad_top_ratio))
                         bottom_y = min(h, int(base_bottom_y + face_h * pad_bottom_ratio))
-                        
-                        # Ensure boundaries are within image
-                        left_x = max(0, left_x)
-                        right_x = min(w, right_x)
                         
                         x_c, y_c, bw, bh = to_yolo_bbox(left_x, top_y, right_x, bottom_y, w, h)
                 except Exception:
@@ -160,6 +160,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_path", help="Path to YOLO model if source is 'model'")
     parser.add_argument("--color", choices=["rgb", "grayscale"], default="rgb", help="Color mode")
     parser.add_argument("--apply_clahe", action="store_true", help="Apply Contrast Limited Adaptive Histogram Equalization (CLAHE)")
+    parser.add_argument("--pad_w_ratio", type=float, default=0.0, help="Horizontal padding ratio on left and right (default: 0.0)")
     parser.add_argument("--pad_top_ratio", type=float, default=0.0, help="Vertical padding ratio above the ears (default: 0.0)")
     parser.add_argument("--pad_bottom_ratio", type=float, default=0.2, help="Vertical padding ratio below the mouth (default: 0.2)")
     parser.add_argument("--pt_bottom", type=int, default=2, help="Index of the point for the bottom boundary (default: 2 / Mouth)")
@@ -167,4 +168,4 @@ if __name__ == "__main__":
     parser.add_argument("--pt_right_top", type=int, default=8, help="Index of the point for the right and top boundary (default: 8 / Right Ear 3)")
     
     args = parser.parse_args()
-    build_dataset(args.input_dir, args.output_dir, args.source, args.model_path, args.color, args.apply_clahe, pad_top_ratio=args.pad_top_ratio, pad_bottom_ratio=args.pad_bottom_ratio, pt_bottom=args.pt_bottom, pt_left_top=args.pt_left_top, pt_right_top=args.pt_right_top)
+    build_dataset(args.input_dir, args.output_dir, args.source, args.model_path, args.color, args.apply_clahe, pad_w_ratio=args.pad_w_ratio, pad_top_ratio=args.pad_top_ratio, pad_bottom_ratio=args.pad_bottom_ratio, pt_bottom=args.pt_bottom, pt_left_top=args.pt_left_top, pt_right_top=args.pt_right_top)
