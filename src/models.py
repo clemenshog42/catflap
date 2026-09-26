@@ -57,7 +57,7 @@ class CatFlapPipeline:
             print(f"Tracking error (likely dimension mismatch): {e}")
             return None
 
-    def run_classifier(self, frame, box):
+    def run_prey_detector(self, frame, box):
         if self.classifier is None:
             return 0.0, None
             
@@ -66,9 +66,9 @@ class CatFlapPipeline:
         face_h = y2 - y1
         
         if getattr(self, 'use_asymmetric_crop', True):
-            pad_w = int(face_w * 0)
-            pad_top = int(face_h * -0.35)
-            pad_bottom = int(face_h * 0.3)
+            pad_w = int(face_w * 0.3)
+            pad_top = int(face_h * 0)
+            pad_bottom = int(face_h * 0.8)
         else:
             pad_w = int(face_w * 0)
             pad_top = int(face_h * 0)
@@ -121,19 +121,22 @@ class CatFlapPipeline:
         results = self.classifier(final_crop, verbose=False)
         
         result = results[0]
-        probs = result.probs
         
-        if probs is None:
-            return 0.0, final_crop
-            
-        class_idx = 1
-        for i, name in result.names.items():
-            if 'with' in name.lower() or 'prey' in name.lower():
-                class_idx = i
+        prey_conf = 0.0
+        
+        # Object detection extraction logic
+        if result.boxes is not None and len(result.boxes) > 0:
+            for box_data in result.boxes:
+                cls_id = int(box_data.cls[0].item())
+                conf = box_data.conf[0].item()
+                name = result.names[cls_id].lower()
                 
-        if probs.data.shape[0] > class_idx:
-            prey_conf = probs.data[class_idx].item()
-        else:
-            prey_conf = probs.top1conf.item() if ('with' in result.names[probs.top1].lower()) else 0.0
+                # Check if this box is classified as 'prey'
+                if 'prey' in name or 'mouse' in name or 'bird' in name:
+                    if conf > prey_conf:
+                        prey_conf = conf
+                        
+            # Draw the bounding box of the prey on final_crop for visualization
+            final_crop = result.plot()
             
         return prey_conf, final_crop

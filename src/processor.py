@@ -33,13 +33,13 @@ class CatFlapProcessor:
         """Initializes the Cat Flap models, state machine, and configuration."""
         self.pipeline = CatFlapPipeline(
             detector_path="models/cat_face_2609.pt",
-            classifier_path="models/cat_prey_2609.pt",
+            classifier_path="models/cat_prey_2609_v5.pt",
             apply_clahe_detector=False,
             apply_clahe_classifier=False,
             color_mode_detector="rgb",
             color_mode_classifier="rgb"
         )
-        self.state_machine = StateMachine(history_length=1, threshold=0.8, max_missed_frames=30)
+        self.state_machine = StateMachine(history_length=1, threshold=0.9, max_missed_frames=30)
         
         self.save_uncertain_dir = save_uncertain_dir
         self.last_saved_frame = {}
@@ -75,8 +75,8 @@ class CatFlapProcessor:
             confidences = results.boxes.conf.cpu().numpy()
             
             for box, track_id, cat_conf in zip(boxes, track_ids, confidences):
-                # 3. Run Classification on the crop
-                prey_confidence, crop_img = self.pipeline.run_classifier(frame, box)
+                # 3. Run Prey Object Detector on the crop
+                prey_confidence, crop_img = self.pipeline.run_prey_detector(frame, box)
                 if crop_img is not None:
                     self.latest_crop = crop_img
                 
