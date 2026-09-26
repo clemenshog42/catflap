@@ -20,16 +20,16 @@ class CatFlapPipeline:
         self.classifier_path = classifier_path
         print(f"Loading Object Detector from: {detector_path}")
         try:
-            self.detector = YOLO(detector_path, task='detect')
+            self.detector = YOLO(detector_path)
         except Exception as e:
             print(f"Warning: Failed to load detector. Make sure the path is correct. Error: {e}")
             self.detector = None
             
-        print(f"Loading Classifier from: {classifier_path}")
+        print(f"Loading Prey Model from: {classifier_path}")
         try:
-            self.classifier = YOLO(classifier_path, task='classify')
+            self.classifier = YOLO(classifier_path)
         except Exception as e:
-            print(f"Warning: Failed to load classifier. Make sure the path is correct. Error: {e}")
+            print(f"Warning: Failed to load prey model. Make sure the path is correct. Error: {e}")
             self.classifier = None
 
     def run_detector(self, frame):
@@ -66,9 +66,9 @@ class CatFlapPipeline:
         face_h = y2 - y1
         
         if getattr(self, 'use_asymmetric_crop', True):
-            pad_w = int(face_w * 0.3)
+            pad_w = int(face_w * 0.8)
             pad_top = int(face_h * 0)
-            pad_bottom = int(face_h * 0.8)
+            pad_bottom = int(face_h * 2.0)
         else:
             pad_w = int(face_w * 0)
             pad_top = int(face_h * 0)
