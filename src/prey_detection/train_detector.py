@@ -7,14 +7,21 @@ import yaml
 from pathlib import Path
 from ultralytics import YOLO
 
-def inject_negatives(data_yaml, negatives_dir, num_negatives):
-    """Copies negative images (background only, no prey) into the YOLO dataset."""
+import cv2
+import numpy as np
+
+def inject_negatives(data_yaml, negatives_dir, num_negatives, face_model_path="models/cat_face_2609.pt"):
+    """Finds cats in negative images, crops them, and copies them as background (negative) images."""
     if not negatives_dir or not num_negatives:
         return
         
     negatives_dir = Path(negatives_dir)
     if not negatives_dir.exists():
         print(f"❌ Negatives directory {negatives_dir} not found!")
+        return
+        
+    if not os.path.exists(face_model_path):
+        print(f"❌ Face model {face_model_path} not found! Cannot crop negatives.")
         return
         
     # Get all images in negatives_dir
@@ -26,49 +33,97 @@ def inject_negatives(data_yaml, negatives_dir, num_negatives):
         print("❌ No images found in negatives directory!")
         return
         
-    # Sample the negatives
     random.seed(42)
-    sampled_negs = random.sample(all_negs, min(num_negatives, len(all_negs)))
-    print(f"💉 Injecting {len(sampled_negs)} negative images into the dataset...")
+    random.shuffle(all_negs)
     
     with open(data_yaml, 'r') as f:
         data = yaml.safe_load(f)
         
     base_dir = Path(data_yaml).parent
     
-    # Calculate splits (80% train, 20% val)
-    train_count = int(len(sampled_negs) * 0.8)
-    train_negs = sampled_negs[:train_count]
-    val_negs = sampled_negs[train_count:]
-    
-    def copy_negs(negs, split_name):
-        if split_name not in data:
-            return
-        
-        # Resolve target images directory
+    # Resolve target directories
+    def get_split_dir(split_name):
+        if split_name not in data: return None
         split_path = base_dir / data[split_name]
-        if not split_path.exists():
-            split_path = Path(data[split_name])
+        if not split_path.exists(): split_path = Path(data[split_name])
+        if split_path.is_file(): return split_path.parent
+        return split_path
+
+    train_dir = get_split_dir('train')
+    val_dir = get_split_dir('val')
+    
+    if not train_dir or not val_dir:
+        print("❌ Could not resolve train/val directories from yaml!")
+        return
+
+    print(f"💉 Searching {len(all_negs)} negative images for cats using {face_model_path}...")
+    face_model = YOLO(face_model_path)
+    
+    successful_crops = 0
+    pad_w_ratio = 0.0  # From models.py
+    pad_top_ratio = -0.35
+    pad_bottom_ratio = 0.3
+    
+    for img_path in all_negs:
+        if successful_crops >= num_negatives:
+            break
             
-        if split_path.is_file():  # sometimes it's a txt file list
-            target_img_dir = split_path.parent
-        else:
-            target_img_dir = split_path
+        img = cv2.imread(str(img_path))
+        if img is None:
+            continue
             
-        for img in negs:
-            # YOLO treats images without matching .txt files as background (negative) images!
-            shutil.copy(img, target_img_dir / img.name)
+        results = face_model(img, verbose=False, conf=0.4)[0]
+        if len(results.boxes) == 0:
+            continue
             
-    copy_negs(train_negs, 'train')
-    copy_negs(val_negs, 'val')
-    print("✅ Negatives successfully injected!")
+        for box_idx, box in enumerate(results.boxes.xyxy.cpu().numpy()):
+            x1, y1, x2, y2 = map(int, box)
+            h, w = img.shape[:2]
+            
+            face_w = x2 - x1
+            face_h = y2 - y1
+            
+            x1_pad = max(0, x1 - int(face_w * pad_w_ratio))
+            y1_pad = max(0, y1 - int(face_h * pad_top_ratio))
+            x2_pad = min(w, x2 + int(face_w * pad_w_ratio))
+            y2_pad = min(h, y2 + int(face_h * pad_bottom_ratio))
+            y1_pad = min(y2_pad - 1, y1_pad)
+            
+            crop_img = img[y1_pad:y2_pad, x1_pad:x2_pad].copy()
+            if crop_img.size == 0:
+                continue
+                
+            ch, cw = crop_img.shape[:2]
+            max_dim = max(ch, cw)
+            top_pad = (max_dim - ch) // 2
+            bottom_pad = max_dim - ch - top_pad
+            left_pad = (max_dim - cw) // 2
+            right_pad = max_dim - cw - left_pad
+            
+            crop_img = cv2.copyMakeBorder(
+                crop_img, 
+                top_pad, bottom_pad, left_pad, right_pad, 
+                cv2.BORDER_CONSTANT, 
+                value=[0, 0, 0]
+            )
+            
+            # Save the cropped negative
+            filename = f"{img_path.stem}_negcat{box_idx}{img_path.suffix}"
+            target_dir = val_dir if random.random() < 0.2 else train_dir
+            cv2.imwrite(str(target_dir / filename), crop_img)
+            
+            successful_crops += 1
+            if successful_crops >= num_negatives:
+                break
+                
+    print(f"✅ Successfully injected {successful_crops} cropped negative cat faces!")
 
 
-def train_model(data_yaml, epochs=50, imgsz=224, batch=16, project="prey_detector", color_mode="rgb", apply_clahe=False, negatives_dir=None, num_negatives=0):
+def train_model(data_yaml, epochs=50, imgsz=224, batch=16, project="prey_detector", color_mode="rgb", apply_clahe=False, negatives_dir=None, num_negatives=0, face_model_path="models/cat_face_2609.pt"):
     device = 0 if torch.cuda.is_available() else "cpu"
     print(f"🚀 Training on device: {device}")
     
-    inject_negatives(data_yaml, negatives_dir, num_negatives)
+    inject_negatives(data_yaml, negatives_dir, num_negatives, face_model_path)
     
     # Let YOLO natively handle grayscale by modifying the yaml!
     if color_mode == "grayscale":
@@ -120,6 +175,7 @@ if __name__ == "__main__":
     parser.add_argument("--apply_clahe", action="store_true", help="Apply CLAHE")
     parser.add_argument("--negatives_dir", default=None, help="Directory containing images of cats with NO prey to use as background negatives.")
     parser.add_argument("--num_negatives", type=int, default=0, help="Number of negative images to randomly inject into the dataset.")
+    parser.add_argument("--face_model", default="models/cat_face_2609.pt", help="Path to the YOLO face model to crop the negatives.")
     
     args = parser.parse_args()
-    train_model(args.data_yaml, args.epochs, args.imgsz, args.batch, args.project, args.color, args.apply_clahe, args.negatives_dir, args.num_negatives)
+    train_model(args.data_yaml, args.epochs, args.imgsz, args.batch, args.project, args.color, args.apply_clahe, args.negatives_dir, args.num_negatives, args.face_model)
