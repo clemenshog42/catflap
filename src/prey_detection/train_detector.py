@@ -37,7 +37,7 @@ def train_model(data_yaml, epochs=50, imgsz=224, batch=16, project="prey_detecto
             hsv_h=0.015,     # Slight hue variation
             hsv_s=0.7,       # Desaturates some images to mimic night-vision/IR
             hsv_v=0.4,       # Simulates bright daylight vs dark night lighting
-            scale=0.2
+            scale=0.2,
             name="train",
             cache=False
         )
