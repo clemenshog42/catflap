@@ -32,12 +32,14 @@ class CatFlapProcessor:
     def __init__(self, save_uncertain_dir=None):
         """Initializes the Cat Flap models, state machine, and configuration."""
         self.pipeline = CatFlapPipeline(
-            detector_path="models/cat_face_2808_clahe.pt",
-            classifier_path="models/prey_V12.pt",
-            apply_clahe_detector=True,
-            apply_clahe_classifier=True
+            detector_path="models/cat_face_2609.pt",
+            classifier_path="models/cat_prey_2609.pt",
+            apply_clahe_detector=False,
+            apply_clahe_classifier=False,
+            color_mode_detector="rgb",
+            color_mode_classifier="rgb"
         )
-        self.state_machine = StateMachine(history_length=30, threshold=0.8, max_missed_frames=30)
+        self.state_machine = StateMachine(history_length=1, threshold=0.8, max_missed_frames=30)
         
         self.save_uncertain_dir = save_uncertain_dir
         self.last_saved_frame = {}
@@ -82,7 +84,7 @@ class CatFlapProcessor:
                 current_state = self.state_machine.update(track_id, prey_confidence, frame_idx)
                 
                 # Hard Negative Mining
-                if self.save_uncertain_dir and 0.15 <= prey_confidence <= 0.6:
+                if self.save_uncertain_dir and 0.1 <= prey_confidence <= 0.9:
                     if track_id not in self.last_saved_frame or (frame_idx - self.last_saved_frame[track_id]) > 30:
                         filename = os.path.join(self.save_uncertain_dir, f"uncertain_id{track_id}_f{frame_idx}_conf{prey_confidence:.2f}.jpg")
                         cv2.imwrite(filename, pristine_frame)

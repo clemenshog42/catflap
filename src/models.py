@@ -11,9 +11,11 @@ except ImportError:
 from ultralytics import YOLO
 
 class CatFlapPipeline:
-    def __init__(self, detector_path="path/to/cat_face_detector.pt", classifier_path="path/to/prey_classifier.pt", apply_clahe_detector=False, apply_clahe_classifier=True):
+    def __init__(self, detector_path="path/to/cat_face_detector.pt", classifier_path="path/to/prey_classifier.pt", apply_clahe_detector=False, apply_clahe_classifier=True, color_mode_detector="grayscale", color_mode_classifier="grayscale"):
         self.apply_clahe_detector = apply_clahe_detector
         self.apply_clahe_classifier = apply_clahe_classifier
+        self.color_mode_detector = color_mode_detector
+        self.color_mode_classifier = color_mode_classifier
         self.detector_path = detector_path
         self.classifier_path = classifier_path
         print(f"Loading Object Detector from: {detector_path}")
@@ -34,8 +36,7 @@ class CatFlapPipeline:
         if self.detector is None:
             return None
             
-        # Wenn das Modell KEIN Farbmodell ist, braucht es zwingend Graustufen (1 Kanal)
-        needs_gray = 'colour' not in self.detector_path.lower()
+        needs_gray = (self.color_mode_detector == "grayscale")
         
         if self.apply_clahe_detector:
             gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -103,7 +104,7 @@ class CatFlapPipeline:
             value=[0, 0, 0]
         )
         
-        needs_gray = 'colour' not in self.classifier_path.lower()
+        needs_gray = (self.color_mode_classifier == "grayscale")
         
         if self.apply_clahe_classifier:
             gray_crop = cv2.cvtColor(square_crop, cv2.COLOR_BGR2GRAY)
