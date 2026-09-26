@@ -1,71 +1,22 @@
 import argparse
 import torch
-import cv2
 import os
-import yaml
 from pathlib import Path
-from tqdm import tqdm
 from ultralytics import YOLO
-
-def preprocess_dataset(data_yaml_path, color_mode="rgb", apply_clahe=False):
-    """Preprocesses the Roboflow dataset images in-place for grayscale and CLAHE."""
-    if color_mode == "rgb" and not apply_clahe:
-        return
-        
-    print(f"Applying preprocessing: color={color_mode}, clahe={apply_clahe}")
-    
-    with open(data_yaml_path, 'r') as f:
-        data = yaml.safe_load(f)
-        
-    base_dir = Path(data_yaml_path).parent
-    
-    for split in ['train', 'val', 'test']:
-        if split not in data:
-            continue
-            
-        split_path = base_dir / data[split]
-        if not split_path.exists():
-            # Sometimes paths in yaml are absolute or different
-            split_path = Path(data[split])
-            if not split_path.exists():
-                continue
-                
-        # Find all images
-        images = []
-        for ext in ['.jpg', '.jpeg', '.png']:
-            images.extend(split_path.rglob(f'*{ext}'))
-            
-        for img_path in tqdm(images, desc=f"Processing {split}"):
-            img = cv2.imread(str(img_path))
-            if img is None:
-                continue
-                
-            if color_mode == "grayscale":
-                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                if apply_clahe:
-                    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-                    gray = clahe.apply(gray)
-                final_img = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-            else:
-                if apply_clahe:
-                    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-                    l, a, b = cv2.split(lab)
-                    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-                    cl = clahe.apply(l)
-                    limg = cv2.merge((cl,a,b))
-                    final_img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
-                else:
-                    final_img = img
-                    
-            cv2.imwrite(str(img_path), final_img)
 
 
 def train_model(data_yaml, epochs=50, imgsz=224, batch=16, project="prey_detector", color_mode="rgb", apply_clahe=False):
     device = 0 if torch.cuda.is_available() else "cpu"
     print(f"🚀 Training on device: {device}")
     
-    # Preprocess dataset first!
-    preprocess_dataset(data_yaml, color_mode, apply_clahe)
+    # Let YOLO natively handle grayscale by modifying the yaml!
+    if color_mode == "grayscale":
+        with open(data_yaml, 'a') as f:
+            f.write("\nchannels: 1\n")
+        print("✅ Added 'channels: 1' to data.yaml for native YOLO grayscale support.")
+        
+    if apply_clahe:
+        print("⚠️ Warning: YOLO does not natively support CLAHE via the yaml. If you need CLAHE, you must preprocess the images manually!")
     
     # Pretrained YOLO26 Nano object detection model
     model = YOLO("yolo11n.pt")
