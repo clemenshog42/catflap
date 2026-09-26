@@ -30,6 +30,14 @@ def train_model(data_yaml, epochs=50, imgsz=224, batch=16, project="prey_detecto
             device=device,
             patience=10,
             project=project,
+            mosaic=0.0,      # Disable 4-image stitching to preserve small prey features
+            fliplr=0.5,      # Left/Right flip
+            flipud=0.0,      # No upside-down cats
+            degrees=10.0,    # Slight head tilts
+            hsv_h=0.015,     # Slight hue variation
+            hsv_s=0.7,       # Desaturates some images to mimic night-vision/IR
+            hsv_v=0.4,       # Simulates bright daylight vs dark night lighting
+            scale=0.2
             name="train",
             cache=False
         )
