@@ -19,7 +19,7 @@ def train_model(data_yaml, epochs=50, imgsz=224, batch=16, project="prey_detecto
         print("⚠️ Warning: YOLO does not natively support CLAHE via the yaml. If you need CLAHE, you must preprocess the images manually!")
     
     # Pretrained YOLO26 Nano object detection model
-    model = YOLO("yolo11n.pt")
+    model = YOLO("yolo26n.pt")
     
     try:
         results = model.train(
@@ -29,14 +29,6 @@ def train_model(data_yaml, epochs=50, imgsz=224, batch=16, project="prey_detecto
             batch=batch,
             device=device,
             patience=10,
-            # Object Detection Augmentations
-            fliplr=0.5,     # Safe: horizontally flip
-            degrees=10.0,   # Safe: slight rotation
-            translate=0.1,  # Safe: translation
-            shear=0.5,      # Safe: slight shear
-            scale=0.1,      # Slight scaling
-            hsv_v=0.2,      # Brightness augmentation
-            erasing=0.0,    # Disabled per user request
             project=project,
             name="train",
             cache=False
