@@ -1,4 +1,4 @@
-﻿import cv2
+import cv2
 import numpy as np
 import sys
 try:
@@ -14,6 +14,8 @@ class CatFlapPipeline:
     def __init__(self, detector_path="path/to/cat_face_detector.pt", classifier_path="path/to/prey_classifier.pt", apply_clahe_detector=False, apply_clahe_classifier=True):
         self.apply_clahe_detector = apply_clahe_detector
         self.apply_clahe_classifier = apply_clahe_classifier
+        self.detector_path = detector_path
+        self.classifier_path = classifier_path
         print(f"Loading Object Detector from: {detector_path}")
         try:
             self.detector = YOLO(detector_path, task='detect')
@@ -32,17 +34,23 @@ class CatFlapPipeline:
         if self.detector is None:
             return None
             
+        # Wenn das Modell KEIN Farbmodell ist, braucht es zwingend Graustufen (1 Kanal)
+        needs_gray = 'colour' not in self.detector_path.lower()
+        
         if self.apply_clahe_detector:
             gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
             gray_frame = clahe.apply(gray_frame)
-            # Make 3 channels just in case YOLOv11 expects it for RGB models acting on gray
-            # gray_frame = cv2.cvtColor(gray_frame, cv2.COLOR_GRAY2BGR)  # Removed to fix 1-channel model crash
+            final_frame = cv2.cvtColor(gray_frame, cv2.COLOR_GRAY2BGR)
         else:
-            gray_frame = frame
+            if needs_gray:
+                gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                final_frame = cv2.cvtColor(gray_frame, cv2.COLOR_GRAY2BGR)
+            else:
+                final_frame = frame
         
         try:
-            results = self.detector.track(gray_frame, persist=True, tracker="bytetrack.yaml", conf=0.1, verbose=False)
+            results = self.detector.track(final_frame, persist=True, tracker="bytetrack.yaml", conf=0.1, verbose=False)
             return results[0] 
         except ValueError as e:
             print(f"Tracking error (likely dimension mismatch): {e}")
@@ -95,13 +103,19 @@ class CatFlapPipeline:
             value=[0, 0, 0]
         )
         
+        needs_gray = 'colour' not in self.classifier_path.lower()
+        
         if self.apply_clahe_classifier:
             gray_crop = cv2.cvtColor(square_crop, cv2.COLOR_BGR2GRAY)
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
             gray_crop = clahe.apply(gray_crop)
             final_crop = cv2.cvtColor(gray_crop, cv2.COLOR_GRAY2BGR)
         else:
-            final_crop = square_crop
+            if needs_gray:
+                gray_crop = cv2.cvtColor(square_crop, cv2.COLOR_BGR2GRAY)
+                final_crop = cv2.cvtColor(gray_crop, cv2.COLOR_GRAY2BGR)
+            else:
+                final_crop = square_crop
             
         results = self.classifier(final_crop, verbose=False)
         
@@ -122,4 +136,3 @@ class CatFlapPipeline:
             prey_conf = probs.top1conf.item() if ('with' in result.names[probs.top1].lower()) else 0.0
             
         return prey_conf, final_crop
-
