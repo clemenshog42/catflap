@@ -88,6 +88,9 @@ class CatFlapProcessor:
             # This completely eliminates tracking ID reset bugs caused by low FPS!
             current_state = self.state_machine.update(1, frame_max_prey_conf, frame_idx)
             
+            history_len = len(self.state_machine.tracks[1].confidence_history) if 1 in self.state_machine.tracks else 0
+            print(f"[Frame {frame_idx}] Cat detected! Prey Conf: {frame_max_prey_conf:.2f} | State: {current_state.value} | History: {history_len}/5")
+            
             # Hard Negative Mining & Drawing
             for box, cat_conf, prey_confidence in prey_results:
                 if self.save_uncertain_dir and 0.3 <= prey_confidence <= 0.6:
@@ -98,6 +101,10 @@ class CatFlapProcessor:
                 
                 # Draw results on frame
                 draw_info(frame, box, 1, current_state, prey_confidence, cat_conf)
+        else:
+            # If we want to debug silent frames (Optional, can be spammy)
+            if frame_idx % 10 == 0:
+                print(f"[Frame {frame_idx}] No cat detected in this frame.")
                 
         # Clean up stale tracks and evaluate global flap state
         self.state_machine.process_global_state(frame_idx)
