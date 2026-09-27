@@ -27,11 +27,13 @@ class TrackState:
         self.confidence_history.append(prey_confidence)
         self.last_seen = frame_idx
         
-        # Calculate moving average
-        avg_confidence = np.mean(self.confidence_history)
+        # Use max instead of mean! If the AI catches even a GLIMPSE of a mouse
+        # in the last 15 frames (e.g. 1 frame at 0.90), it will lock the door.
+        # This prevents the moving average from diluting brief detections.
+        max_confidence = np.max(self.confidence_history) if len(self.confidence_history) > 0 else 0.0
         
-        # Determine new state based on aggregated confidence
-        self.current_state = State.CAT_WITH_PREY if avg_confidence >= self.threshold else State.CAT_NO_PREY
+        # Determine new state based on maximum confidence in the rolling window
+        self.current_state = State.CAT_WITH_PREY if max_confidence >= self.threshold else State.CAT_NO_PREY
             
         return self.current_state
 
