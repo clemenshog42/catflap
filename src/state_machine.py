@@ -38,7 +38,7 @@ class TrackState:
 class StateMachine:
     """Manages multiple TrackStates and evaluates the global access decision."""
     
-    def __init__(self, history_length=30, threshold=0.8, max_missed_frames=30):
+    def __init__(self, history_length=30, threshold=0.5, max_missed_frames=30):
         self.tracks = {} # track_id -> TrackState
         self.history_length = history_length
         self.threshold = threshold
