@@ -117,7 +117,7 @@ class SimulationCatflap(Catflap):
 
 class ServoCatflap(Catflap):
     """A simple DIY cat flap with a single servo blocking the door."""
-    def __init__(self, gpio_pin=17, lock_value=-1.0, unlock_value=1.0, video_source=None, flip=False):
+    def __init__(self, gpio_pin=17, lock_value=1.0, unlock_value=-1.0, video_source=None, flip=False):
         super().__init__(video_source, flip)
         self.lock_value = lock_value
         self.unlock_value = unlock_value
