@@ -33,13 +33,13 @@ class CatFlapProcessor:
         """Initializes the Cat Flap models, state machine, and configuration."""
         self.pipeline = CatFlapPipeline(
             detector_path="models/cat_face_2609.pt",
-            classifier_path="models/cat_prey_2609_v5.pt",
+            classifier_path="models/cat_prey_2609_v7.pt",
             apply_clahe_detector=False,
             apply_clahe_classifier=False,
             color_mode_detector="rgb",
             color_mode_classifier="rgb"
         )
-        self.state_machine = StateMachine(history_length=1, threshold=0.9, max_missed_frames=30)
+        self.state_machine = StateMachine(history_length=15, threshold=0.5, max_missed_frames=30)
         
         self.save_uncertain_dir = save_uncertain_dir
         self.last_saved_frame = {}
@@ -68,30 +68,34 @@ class CatFlapProcessor:
         
         if results and results.boxes:
             boxes = results.boxes.xyxy.cpu().numpy()
-            if results.boxes.id is not None:
-                track_ids = results.boxes.id.int().cpu().tolist()
-            else:
-                track_ids = [0] * len(boxes)
             confidences = results.boxes.conf.cpu().numpy()
             
-            for box, track_id, cat_conf in zip(boxes, track_ids, confidences):
+            frame_max_prey_conf = 0.0
+            prey_results = []
+            
+            for box, cat_conf in zip(boxes, confidences):
                 # 3. Run Prey Object Detector on the crop
                 prey_confidence, crop_img = self.pipeline.run_prey_detector(frame, box)
                 if crop_img is not None:
                     self.latest_crop = crop_img
+                    
+                frame_max_prey_conf = max(frame_max_prey_conf, prey_confidence)
+                prey_results.append((box, cat_conf, prey_confidence))
                 
-                # 4. Update State Machine
-                current_state = self.state_machine.update(track_id, prey_confidence, frame_idx)
-                
-                # Hard Negative Mining
-                if self.save_uncertain_dir and 0.1 <= prey_confidence <= 0.9:
-                    if track_id not in self.last_saved_frame or (frame_idx - self.last_saved_frame[track_id]) > 30:
-                        filename = os.path.join(self.save_uncertain_dir, f"uncertain_id{track_id}_f{frame_idx}_conf{prey_confidence:.2f}.jpg")
+            # 4. Update State Machine ONCE for the whole frame (Global Track ID 1)
+            # This completely eliminates tracking ID reset bugs caused by low FPS!
+            current_state = self.state_machine.update(1, frame_max_prey_conf, frame_idx)
+            
+            # Hard Negative Mining & Drawing
+            for box, cat_conf, prey_confidence in prey_results:
+                if self.save_uncertain_dir and 0.3 <= prey_confidence <= 0.6:
+                    if 1 not in self.last_saved_frame or (frame_idx - self.last_saved_frame[1]) > 30:
+                        filename = os.path.join(self.save_uncertain_dir, f"uncertain_f{frame_idx}_conf{prey_confidence:.2f}.jpg")
                         cv2.imwrite(filename, pristine_frame)
-                        self.last_saved_frame[track_id] = frame_idx
+                        self.last_saved_frame[1] = frame_idx
                 
                 # Draw results on frame
-                draw_info(frame, box, track_id, current_state, prey_confidence, cat_conf)
+                draw_info(frame, box, 1, current_state, prey_confidence, cat_conf)
                 
         # Clean up stale tracks and evaluate global flap state
         self.state_machine.process_global_state(frame_idx)

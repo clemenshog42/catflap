@@ -51,10 +51,10 @@ class CatFlapPipeline:
                 final_frame = frame
         
         try:
-            results = self.detector.track(final_frame, persist=True, tracker="bytetrack.yaml", conf=0.1, verbose=False)
+            results = self.detector.predict(final_frame, conf=0.1, verbose=False)
             return results[0] 
         except ValueError as e:
-            print(f"Tracking error (likely dimension mismatch): {e}")
+            print(f"Prediction error (likely dimension mismatch): {e}")
             return None
 
     def run_prey_detector(self, frame, box):
