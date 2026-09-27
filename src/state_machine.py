@@ -90,8 +90,8 @@ class StateMachine:
             if track.current_state == State.CAT_WITH_PREY:
                 has_prey = True
                 all_cats_clean = False
-            if len(track.confidence_history) < self.history_length / 2:
-                # We need at least half of the history to confirm a cat is actually clean
+            if len(track.confidence_history) < self.history_length:
+                # We need FULL history to be collected to confirm a cat is actually clean
                 all_cats_clean = False
                 
         access_state = None
@@ -99,7 +99,7 @@ class StateMachine:
             # Immediate priority: deny access if any prey is present
             access_state = AccessState.DENIED
         elif all_cats_clean:
-            # Safe to grant access if ALL cats are clean and have been tracked for at least half history
+            # Safe to grant access if ALL cats are clean and have been tracked for full history
             access_state = AccessState.GRANTED
             
         import time
