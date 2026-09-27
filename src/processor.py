@@ -12,6 +12,8 @@ def draw_info(frame, box, track_id, state, prey_conf, cat_conf):
         color = (0, 0, 255) # Red for prey
     elif state == State.CAT_NO_PREY:
         color = (0, 255, 0) # Green for no prey
+    elif state == State.GATHERING_HISTORY:
+        color = (0, 165, 255) # Orange for gathering history
     else:
         color = (255, 255, 255)
         

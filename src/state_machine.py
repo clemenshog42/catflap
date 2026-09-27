@@ -4,6 +4,7 @@ import numpy as np
 
 class State(Enum):
     NO_CAT = "NO_CAT"
+    GATHERING_HISTORY = "GATHERING_HISTORY"
     CAT_NO_PREY = "CAT_NO_PREY"
     CAT_WITH_PREY = "CAT_WITH_PREY"
 
@@ -19,7 +20,7 @@ class TrackState:
         # Queue to hold the last 'history_length' confidence scores for prey
         self.confidence_history = deque(maxlen=history_length)
         self.threshold = threshold
-        self.current_state = State.CAT_NO_PREY
+        self.current_state = State.GATHERING_HISTORY
         self.last_seen = 0 # Frame counter or timestamp
         
     def update(self, prey_confidence, frame_idx):
@@ -32,7 +33,12 @@ class TrackState:
         avg_confidence = np.mean(self.confidence_history) if len(self.confidence_history) > 0 else 0.0
         
         # Determine new state based on aggregated confidence
-        self.current_state = State.CAT_WITH_PREY if avg_confidence >= self.threshold else State.CAT_NO_PREY
+        if avg_confidence >= self.threshold:
+            self.current_state = State.CAT_WITH_PREY
+        elif len(self.confidence_history) < self.confidence_history.maxlen:
+            self.current_state = State.GATHERING_HISTORY
+        else:
+            self.current_state = State.CAT_NO_PREY
             
         return self.current_state
 
