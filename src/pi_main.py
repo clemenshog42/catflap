@@ -16,6 +16,18 @@ def main(save_uncertain_dir=None, headless=False, video_path=None, output_path=N
         print(e)
         return
 
+    # Subscribe to state changes to trigger the flap hardware
+    def on_access_state_changed(access_state):
+        from state_machine import AccessState
+        if access_state == AccessState.GRANTED:
+            print("[Event] Clean cat detected. UNLOCKING physical flap.")
+            flap.unlock_in()
+        elif access_state == AccessState.DENIED:
+            print("[Event] Prey detected! LOCKING physical flap.")
+            flap.lock_in()
+
+    processor.state_machine.subscribe(on_access_state_changed)
+
     # Optional: Setup Video Writer to save output
     writer = None
     if output_path:
