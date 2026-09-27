@@ -95,8 +95,8 @@ class SimulationCatflap(Catflap):
     """A simulated cat flap that just prints state changes."""
     def __init__(self, video_source=None, flip=False):
         super().__init__(video_source, flip)
-        self.unlock_in()
-        self.unlock_out()
+        self.lock_in()
+        self.lock_out()
 
     def lock_in(self):
         print("[Simulated Flap] 🔒 Entry LOCKED (Prey detected)")
@@ -128,7 +128,8 @@ class ServoCatflap(Catflap):
         else:
             self.servo = Servo(gpio_pin)
             
-        self.unlock_in()
+        # Default state should be securely LOCKED!
+        self.lock_in()
 
     def _move_servo(self, value):
         if self.servo is not None:
