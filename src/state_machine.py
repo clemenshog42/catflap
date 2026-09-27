@@ -38,7 +38,7 @@ class TrackState:
 class StateMachine:
     """Manages multiple TrackStates and evaluates the global access decision."""
     
-    def __init__(self, history_length=15, threshold=0.8, max_missed_frames=30):
+    def __init__(self, history_length=30, threshold=0.8, max_missed_frames=30):
         self.tracks = {} # track_id -> TrackState
         self.history_length = history_length
         self.threshold = threshold
@@ -88,8 +88,8 @@ class StateMachine:
             if track.current_state == State.CAT_WITH_PREY:
                 has_prey = True
                 all_cats_clean = False
-            elif len(track.confidence_history) < 5:
-                # We need at least 5 frames of history to confirm a cat is actually clean
+            if len(track.confidence_history) < self.history_length / 2:
+                # We need at least half of the history to confirm a cat is actually clean
                 all_cats_clean = False
                 
         access_state = None
@@ -97,14 +97,25 @@ class StateMachine:
             # Immediate priority: deny access if any prey is present
             access_state = AccessState.DENIED
         elif all_cats_clean:
-            # Safe to grant access if ALL cats are clean and have been tracked for at least 5 frames
+            # Safe to grant access if ALL cats are clean and have been tracked for at least half history
             access_state = AccessState.GRANTED
             
+        import time
+        current_time = time.time()
+        
         # Only notify if we reached a conclusive state AND it's different from the last emitted state
         if access_state and access_state != self.last_state:
-            self.last_state = access_state
-            for cb in self.global_callbacks:
-                cb(access_state)
+            # Debounce: Do not allow the servo to bounce back and forth rapidly.
+            # If we are granting access (unlocking), ensure at least 5 seconds have passed since the last state change.
+            # If we are denying access (locking due to prey), we do NOT wait, it is an emergency!
+            is_emergency_lock = (access_state == AccessState.DENIED)
+            time_since_last_change = current_time - getattr(self, 'last_state_change_time', 0.0)
+            
+            if is_emergency_lock or time_since_last_change >= 5.0:
+                self.last_state = access_state
+                self.last_state_change_time = current_time
+                for cb in self.global_callbacks:
+                    cb(access_state)
                 
     def get_state(self, track_id):
         if track_id in self.tracks:
