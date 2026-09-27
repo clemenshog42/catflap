@@ -123,6 +123,11 @@ class StateMachine:
                 self.last_state_change_time = current_time
                 for cb in self.global_callbacks:
                     cb(access_state)
+        elif access_state is None and len(self.tracks) == 0:
+            # If there are no cats in frame, reset the last state.
+            # This ensures that if the physical door auto-locks itself after 30s, 
+            # the state machine will correctly re-trigger GRANTED when the next clean cat arrives!
+            self.last_state = None
                 
     def get_state(self, track_id):
         if track_id in self.tracks:
