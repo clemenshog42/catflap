@@ -15,7 +15,7 @@ class AccessState(Enum):
 class TrackState:
     """Manages the state and confidence history for a single tracked object (cat)."""
     
-    def __init__(self, track_id, history_length=15, threshold=0.2):
+    def __init__(self, track_id, history_length=5, threshold=0.2):
         self.track_id = track_id
         # Queue to hold the last 'history_length' confidence scores for prey
         self.confidence_history = deque(maxlen=history_length)
@@ -45,7 +45,7 @@ class TrackState:
 class StateMachine:
     """Manages multiple TrackStates and evaluates the global access decision."""
     
-    def __init__(self, history_length=30, threshold=0.5, max_missed_frames=30):
+    def __init__(self, history_length=5, threshold=0.5, max_missed_frames=30):
         self.tracks = {} # track_id -> TrackState
         self.history_length = history_length
         self.threshold = threshold
