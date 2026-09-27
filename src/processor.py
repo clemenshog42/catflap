@@ -34,8 +34,8 @@ class CatFlapProcessor:
     def __init__(self, save_uncertain_dir=None):
         """Initializes the Cat Flap models, state machine, and configuration."""
         self.pipeline = CatFlapPipeline(
-            detector_path="models/cat_face_2609.pt",
-            classifier_path="models/cat_prey_2609_v7.pt",
+            detector_path="models/cat_face.tflite",
+            classifier_path="models/cat_prey.tflite",
             apply_clahe_detector=False,
             apply_clahe_classifier=False,
             color_mode_detector="rgb",
