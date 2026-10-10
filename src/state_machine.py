@@ -70,7 +70,7 @@ class StateMachine:
             
         return self.tracks[track_id].update(prey_confidence, frame_idx)
         
-    def process_global_state(self, current_frame):
+    def process_global_state(self, current_frame, current_time=None):
         """
         Evaluates all active tracks to make a global decision on access.
         Rule 1: If ANY cat has prey, DENY access.
@@ -108,7 +108,8 @@ class StateMachine:
             access_state = AccessState.GRANTED
             
         import time
-        current_time = time.time()
+        if current_time is None:
+            current_time = time.time()  # offline evaluation passes the video timestamp instead
         
         # Only notify if we reached a conclusive state AND it's different from the last emitted state
         if access_state and access_state != self.last_state:
