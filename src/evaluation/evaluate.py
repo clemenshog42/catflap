@@ -20,6 +20,7 @@ Metrics per video and configuration
                       counted after the allowed decision time (--grace seconds after the cat appeared)
   prey_passed       : 1 if a cat with prey had the door open at least once (event level)
   clean_locked_out  : 1 if a clean cat never got the door opened while visible (event level)
+  missed_cat_frames : frames with a recognisable cat face (face_visible) in which no cat was detected
   latency_s         : time from first visibility to the first correct decision
                       (DENIED for prey videos, GRANTED for clean videos); empty if never reached
   frame-level precision / recall / F1 of the decision "lock" over all frames with a visible cat
@@ -53,7 +54,7 @@ def load_gt(video):
 
 
 def replay(df, history, threshold, max_missed_s=4.0, fps=8.0):
-    """Replays the state machine; returns a list of (time_s, door_open) per processed frame."""
+    """Replays the state machine; returns a list of (time_s, door_open, cat_detected) per processed frame."""
     sm = StateMachine(history_length=history, threshold=threshold, max_missed_frames=int(round(max_missed_s * fps)))
     door = {"open": False}
 
@@ -63,13 +64,15 @@ def replay(df, history, threshold, max_missed_s=4.0, fps=8.0):
 
     out = []
     for (frame, t), rows in df.groupby(["frame", "time_s"], sort=True):
+        detected = False
         for _, r in rows.iterrows():
             if pd.notna(r["track_id"]) and r["track_id"] != "":
+                detected = True
                 sm.update(int(r["track_id"]), float(r["prey_conf"]), int(frame))
         sm.process_global_state(int(frame), current_time=float(t))
         if len(sm.tracks) == 0:
             door["open"] = False  # flap auto-locks when no cat is present
-        out.append((float(t), door["open"]))
+        out.append((float(t), door["open"], detected))
     return out
 
 
@@ -79,10 +82,14 @@ def score(video, timeline, gt, grace):
     first_seen = min((iv[0] for c in cats for iv in c.get("face_visible", c["visible"])), default=None)
     has_prey_video = any(c.get("prey") for c in cats)
     m = dict(video=video, frames=0, cat_frames=0, safety_errors=0, comfort_errors=0,
-             tp=0, fp=0, fn=0, tn=0, prey_passed=0, clean_locked_out=0, latency_s=None)
+             tp=0, fp=0, fn=0, tn=0, prey_passed=0, clean_locked_out=0, latency_s=None,
+             face_frames=0, missed_cat_frames=0)
     ever_open_while_clean = False
-    for t, is_open in timeline:
+    for t, is_open, detected in timeline:
         m["frames"] += 1
+        if any(in_any(t, c.get("face_visible", c["visible"])) for c in cats):
+            m["face_frames"] += 1
+            m["missed_cat_frames"] += not detected
         visible = [c for c in cats if in_any(t, c["visible"])]
         if not visible:
             continue
@@ -134,7 +141,8 @@ def summarize(res):
                 prey_passed=f"{int(prey.prey_passed.sum())}/{len(prey)}",
                 clean_locked_out=f"{int(clean.clean_locked_out.sum())}/{len(clean)}",
                 latency_prey_s=round(prey.latency_s.dropna().mean(), 2) if len(prey) else None,
-                latency_clean_s=round(clean.latency_s.dropna().mean(), 2) if len(clean) else None)
+                latency_clean_s=round(clean.latency_s.dropna().mean(), 2) if len(clean) else None,
+                missed_cat_rate=round(res.missed_cat_frames.sum() / max(1, res.face_frames.sum()), 3))
 
 
 def main():
