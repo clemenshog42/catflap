@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 .env
+
+# Thesis lives in its own repo
+thesis/
