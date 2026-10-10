@@ -1,0 +1,8 @@
+{
+  "video": "with_prey/01_orange_mouse_day.mp4",
+  "duration_s": 10.0,
+  "notes": "Orange tabby carries a grey mouse the whole time; walks from the path to the flap, face frontal ~3.5-6.5 s, turns left ~7 s, passes under the camera from ~8.5 s.",
+  "cats": [
+    {"id": "A", "visible": [[0.0, 10.0]], "face_visible": [[2.0, 8.3]], "prey": [[0.0, 10.0]]}
+  ]
+}

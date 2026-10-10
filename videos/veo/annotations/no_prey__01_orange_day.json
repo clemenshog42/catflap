@@ -1,0 +1,8 @@
+{
+  "video": "no_prey/01_orange_day.mp4",
+  "duration_s": 10.0,
+  "notes": "Counterpart of with_prey/01 without prey; motion practically identical.",
+  "cats": [
+    {"id": "A", "visible": [[0.0, 10.0]], "face_visible": [[2.0, 8.3]], "prey": []}
+  ]
+}
