@@ -4,3 +4,20 @@ __pycache__/
 .ipynb_checkpoints/
 .env
 
+
+# Datasets and generated data (too large for git, kept locally)
+catprey/
+hard_negatives/
+videos/**/*.mp4
+results/raw/
+*.npy
+/yolov8n.pt
+/yolo26n.pt
+
+# Models: only the final models are versioned
+models/*
+!models/cat_face.tflite
+!models/cat_prey.tflite
+!models/cat_face_2609.pt
+!models/cat_prey_2609_v7.pt
+!models/1stage_ablation.pt

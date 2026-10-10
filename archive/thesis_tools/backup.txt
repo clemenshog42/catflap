@@ -1,0 +1,51 @@
+Created At: 2026-08-20T15:54:47+02:00
+Completed At: 2026-08-20T15:54:57+02:00
+
+				The command exited with code 0.
+				Output:
+				<truncated 381 lines>
+\end{enumerate}
+
+\subsection{Einordnung und Edge-Computing}
+Ein wesentliches Nebenziel der Arbeit war es, ein System zu konzipieren, das nicht auf hochleistungsf�hige Cloud-Server angewiesen ist, sondern lokal (on the edge) operieren kann. Die Entscheidung, auf leichtgewichtige Architekturen (YOLOv11n) und optimierte Inferenz-Engines (TensorFlow Lite fǬr den Detektor, OpenVINO fǬr den Klassifikator) zu setzen, rechtfertigt sich durch die erreichten Performance-Metriken (ca. 8 FPS). 
+
+Der Ansatz beweist, dass es durch eine intelligente Architektur (Kaskadierung statt Monolith) m�glich ist, komplexe visuelle Analysen echtzeitf�hig auf Consumer-Hardware abzubilden. Die Kombination aus Deep Learning und einer deterministischen Nachbearbeitung (ByteTrack und State Machine) stellt einen ressourcenschonenden und gleichzeitig hochrobusten L�sungsansatz dar, der in puncto Zuverl�ssigkeit Cloud-basierten Single-Frame-APIs deutlich Ǭberlegen ist, da Latenzprobleme durch NetzwerkǬbertragungen entfallen.
+
+Zusammenfassend l�sst sich festhalten, dass der gew�hlte Ansatz die konzeptionellen HǬrden erfolgreich Ǭberwindet. Die verbleibenden False Positives stellen keinen fundamentalen Architekturfehler dar, sondern spiegeln die Grenzen des zugrunde liegenden Klassifikationsdatensatzes wider. Mit dem in Kapitel 5 integrierten Pipeline-Modul zum automatisierten Speichern unklarer Bilder (Hard Negative Mining) ist der Grundstein fǬr das kontinuierliche Feintuning des Modells bereits gelegt, um die Systemgenauigkeit im Praxisbetrieb iterativ weiter zu maximieren.
+\section{Zusammenfassung und Ausblick}
+\label{sec:zusammenfassung}
+
+Die vorliegende Bachelorarbeit befasst sich mit der Entwicklung eines ausfallsicheren, echtzeitf�higen Zugangssystems fǬr Haustiere, das das unbemerkte Eindringen von Beutetieren (wie M�usen oder V�geln) in den Wohnraum unterbindet. Durch die Kombination moderner Deep-Learning-Methoden mit klassischen Ans�tzen der zeitlichen Modellierung wurde ein System geschaffen, das weit Ǭber die rein bildbasierte (Single-Frame) Objekterkennung hinausgeht.
+
+\subsection{Zusammenfassung der Erkenntnisse}
+\label{subsec:zusammenfassung_erkenntnisse}
+
+Die theoretischen �oberlegungen sowie die praktische Evaluierung haben gezeigt, dass die Erkennung von Beutetieren im Maul einer Katze ein hochkomplexes visuelles Problem darstellt. Die Beutetiere sind in der Regel winzig, stark durch Pfoten oder Schnurrhaare verdeckt und weisen gerade unter den schwierigen Lichtbedingungen bei Nacht (Infrarot-Graustufen) kaum unterscheidbare Texturen auf. Klassische, monolithische Objektdetektoren scheitern an dieser Aufgabenstellung h�ufig.
+
+Als L�sung wurde in dieser Arbeit eine mehrstufige Pipeline (Kaskadierung) entwickelt: Im ersten Schritt detektiert ein YOLOv11-Modell robust das Gesicht der Katze. Der entscheidende Durchbruch gelang durch ein asymmetrisches Cropping-Verfahren (\texttt{pad\_bottom = 30}), welches den Fokusbereich des Bildes pr�zise auf den potenziellen Ort der Beute ausrichtete, ohne diese abzuschneiden. Im zweiten Schritt analysierte ein dediziertes YOLO-Klassifikationsmodell diesen isolierten Bildausschnitt. Um tempor�re Fehlklassifikationen, verursacht durch Bewegungsunsch�rfe oder Lichtreflexe, auszugleichen, wurde ByteTrack zur konsistenten Verfolgung der Katze implementiert, gepaart mit einer deterministischen State Machine. Diese State Machine aggregierte die Klassifikationswerte Ǭber ein gleitendes Zeitfenster (Moving Average) von 15 Frames.
+
+Die Evaluierung auf realen Videodaten demonstrierte den Erfolg dieses Architektur-Ansatzes. Das System erreichte einen perfekten Recall von 100\,\%, was bedeutet, dass kein einziges Beutetier im Testdatensatz Ǭbersehen wurde. Der gew�hlte Schwellenwert (Threshold) von 0,8 spiegelte dabei die Priorit�t des Nutzers wider: \glqq Die Katze hat Vorrang.\grqq\ Zwar fǬhrten schwierige Hintergrundtexturen bei diesem \glqq Safety First\grqq-Ansatz zu wenigen, aber existenten False Positives (Fehlalarme), jedoch erwies sich das Gesamtsystem als hochgradig praxistauglich und lief ressourcenschonend mit durchschnittlich ca. 8 FPS auf Edge-Hardware (TensorFlow Lite und OpenVINO). 
+
+Die zentrale Forschungsfrage konnte somit bejaht werden: Eine Kombination aus Objektdetektion, Tracking und zeitlicher Gl�ttung bietet eine signifikant robustere L�sung als herk�mmliche Einzelbildauswertungen.
+
+\subsection{Ausblick und Weiterentwicklungsm�glichkeiten}
+\label{subsec:ausblick}
+
+Obwohl das System in seiner aktuellen Form bereits zuverl�ssig Beutetiere aussperrt, bieten die gewonnenen Erkenntnisse und die analysierten Fehlerquellen (siehe Kapitel 7) konkrete AnknǬpfungspunkte fǬr zukǬnftige Optimierungen.
+
+\subsubsection{Data Flywheel und Hard Negative Mining}
+Die unmittelbarste und vielversprechendste Methode zur Steigerung der Precision (Reduktion der False Positives) liegt in der Erweiterung des Trainingsdatensatzes. Das System verfǬgt bereits in der aktuellen \texttt{main.py} Ǭber eine implementierte Routine zum \glqq Hard Negative Mining\grqq. Bilder mit mittleren Konfidenzwerten (Unsicherheiten des Klassifikators) werden automatisch lokal abgespeichert. ZukǬnftige Arbeiten k�nnen diesen stetig wachsenden Schatz an realen Randf�llen (Edge Cases) nutzen, um das YOLO-Klassifikationsmodell iterativ nachzutrainieren (Active Learning). Sobald der Klassifikator gelernt hat, dass ein bestimmtes dunkles Blatt im Garten keine Maus ist, wird die False-Positive-Rate des Gesamtsystems sukzessive sinken.
+
+\subsubsection{Sensor-Fusion und Tiefeninformationen}
+Eine der gr�Yten identifizierten Limitationen war der Verlust der 3D-Information, wodurch Objekte im Hintergrund f�lschlicherweise als \glqq im Maul der Katze\grqq\ interpretiert wurden (perspektivische �oberlappung). Eine signifikante architektonische Erweiterung bestǬnde im Einsatz von Stereo-Kameras oder kompakten Time-of-Flight (ToF)- bzw. LiDAR-Sensoren. Durch die Integration von Tiefeninformationen (Depth Map) k�nnte die State Machine Bilder ignorieren, bei denen sich das vermeintliche Beutetier physisch weit hinter der Fokusebene des Katzenkopfs befindet. 
+
+\subsubsection{Multimodale Ans�tze (Audio-Integration)}
+Zus�tzlich zur rein visuellen Analyse k�nnte das System durch multimodale Sensorik erweitert werden. Die Integration eines Mikrofons und eines leichtgewichtigen neuronalen Netzes zur Audio-Klassifikation (Audio Event Detection) k�nnte die Genauigkeit weiter erh�hen. Das Miauen einer Katze, welches darauf schlie�Yen l�sst, dass das Maul frei ist, oder das Fiepen eines Beutetiers stellen wertvolle orthogonale Signale dar, die direkt als erg�nzende Gewichte (Priors) in die Berechnung des gleitenden Durchschnitts der \texttt{StateMachine} einflie�Yen k�nnten.
+
+\subsubsection{Hardware-Beschleunigung durch NPU}
+Hinsichtlich der Inferenz-Hardware bietet der aktuelle Markt rasante Entwicklungen im Bereich lokaler KI-Beschleuniger (Neural Processing Units). Der Wechsel von einer reinen CPU-Inferenz (selbst unter Nutzung von OpenVINO) auf dedizierte Hardware wie den Google Coral Edge TPU oder moderne Intel/AMD NPUs wǬrde die Framerate voraussichtlich um ein Vielfaches steigern. Eine h�here FPS-Zahl erlaubt der State Machine, eine noch feingranularere Historie aufzubauen (z.\,B. 45 Frames statt 15 Frames in der gleichen physischen Zeitspanne), was die zeitliche Gl�ttung gegen Flackern weiter perfektionieren wǬrde.
+
+\vspace{0.5cm}
+
+Abschlie�Yend l�sst sich resǬmieren, dass die in dieser Arbeit entwickelte Pipeline ein �u�Yerst solides, modulares Fundament darstellt. Die Kombination aus zielgerichteter Computer Vision und deterministischer Zustandslogik l�st das Problem des unerwǬnschten Beuteeintrags durch Katzen bereits heute zuverl�ssig und er�ffnet zugleich vielf�ltige, spannende Wege fǬr die Smart-Home-Integration von morgen.
+
