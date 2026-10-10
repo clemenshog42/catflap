@@ -134,8 +134,8 @@ def train_model(data_yaml, epochs=50, imgsz=224, batch=16, project="prey_detecto
     if apply_clahe:
         print("⚠️ Warning: YOLO does not natively support CLAHE via the yaml. If you need CLAHE, you must preprocess the images manually!")
     
-    # Pretrained YOLOv11 Nano Segmentation model
-    model = YOLO("yolo11n-seg.pt")
+    # Pretrained YOLO26 Nano segmentation model
+    model = YOLO("yolo26n-seg.pt")
     
     try:
         results = model.train(
