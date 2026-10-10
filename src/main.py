@@ -2,8 +2,8 @@ import cv2
 import argparse
 from processor import CatFlapProcessor
 
-def main(video_path, save_uncertain_dir=None):
-    processor = CatFlapProcessor(save_uncertain_dir=save_uncertain_dir)
+def main(video_path, save_uncertain_dir=None, use_tracking=True):
+    processor = CatFlapProcessor(save_uncertain_dir=save_uncertain_dir, use_tracking=use_tracking)
     
     # Open video capture (0 for webcam, or path to video file)
     cap = cv2.VideoCapture(video_path if video_path else 0)
@@ -45,6 +45,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Cat Flap Prey Detection System")
     parser.add_argument("--source", type=str, default="", help="Path to video file or camera index")
     parser.add_argument("--save_uncertain", type=str, default="", help="Directory to save uncertain frames")
+    parser.add_argument("--no-tracking", dest="no_tracking", action="store_true", help="Disable ByteTrack; all cats share one global history")
     args = parser.parse_args()
     
-    main(args.source, args.save_uncertain if args.save_uncertain else None)
+    main(args.source, args.save_uncertain if args.save_uncertain else None, use_tracking=not args.no_tracking)

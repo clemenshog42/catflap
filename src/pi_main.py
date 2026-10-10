@@ -3,8 +3,8 @@ import argparse
 from processor import CatFlapProcessor
 from catflap import SimulationCatflap, ServoCatflap
 
-def main(save_uncertain_dir=None, headless=False, video_path=None, output_path=None, simulate_servo=False, flip=False):
-    processor = CatFlapProcessor(save_uncertain_dir=save_uncertain_dir)
+def main(save_uncertain_dir=None, headless=False, video_path=None, output_path=None, simulate_servo=False, flip=False, use_tracking=True):
+    processor = CatFlapProcessor(save_uncertain_dir=save_uncertain_dir, use_tracking=use_tracking)
     
     # Initialize the central Catflap hardware (handles both the lock and the camera/video source)
     try:
@@ -76,6 +76,7 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=str, default=None, help="Path to save the output video (e.g., output.mp4)")
     parser.add_argument("--simulate-servo", action="store_true", help="Run without initializing the physical servo motor")
     parser.add_argument("--flip", action="store_true", help="Flip the camera feed 180 degrees")
+    parser.add_argument("--no-tracking", dest="no_tracking", action="store_true", help="Disable ByteTrack; all cats share one global history")
     args = parser.parse_args()
     
     main(
@@ -84,5 +85,6 @@ if __name__ == "__main__":
         video_path=args.video,
         output_path=args.output,
         simulate_servo=args.simulate_servo,
-        flip=args.flip
+        flip=args.flip,
+        use_tracking=not args.no_tracking
     )

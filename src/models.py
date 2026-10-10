@@ -32,7 +32,8 @@ class CatFlapPipeline:
             print(f"Warning: Failed to load prey model. Make sure the path is correct. Error: {e}")
             self.classifier = None
 
-    def run_detector(self, frame):
+    def run_detector(self, frame, track=False):
+        """Runs the cat face detector. With track=True, ByteTrack assigns persistent IDs (results.boxes.id)."""
         if self.detector is None:
             return None
             
@@ -51,7 +52,10 @@ class CatFlapPipeline:
                 final_frame = frame
         
         try:
-            results = self.detector.predict(final_frame, conf=0.1, verbose=False)
+            if track:
+                results = self.detector.track(final_frame, conf=0.1, persist=True, tracker="bytetrack.yaml", verbose=False)
+            else:
+                results = self.detector.predict(final_frame, conf=0.1, verbose=False)
             return results[0] 
         except ValueError as e:
             print(f"Prediction error (likely dimension mismatch): {e}")

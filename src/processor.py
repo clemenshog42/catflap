@@ -31,15 +31,20 @@ def draw_info(frame, box, track_id, state, prey_conf, cat_conf):
     cv2.putText(frame, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 1)
 
 class CatFlapProcessor:
-    def __init__(self, save_uncertain_dir=None):
-        """Initializes the Cat Flap models, state machine, and configuration."""
+    def __init__(self, save_uncertain_dir=None, use_tracking=True):
+        """Initializes the Cat Flap models, state machine, and configuration.
+
+        use_tracking: True  -> ByteTrack assigns an ID per cat, each cat gets its own confidence history.
+                      False -> all cats share one global history (Global Track ID 1), e.g. for very low FPS.
+        """
+        self.use_tracking = use_tracking
         self.pipeline = CatFlapPipeline(
             detector_path="models/cat_face.tflite",
             classifier_path="models/cat_prey.tflite",
             apply_clahe_detector=False,
             apply_clahe_classifier=False,
-            color_mode_detector="rgb",
-            color_mode_classifier="rgb"
+            color_mode_detector="grayscale",
+            color_mode_classifier="grayscale"
         )
         self.state_machine = StateMachine(history_length=5, threshold=0.5, max_missed_frames=30)
         
@@ -66,41 +71,52 @@ class CatFlapProcessor:
         pristine_frame = frame.copy()
         
         # 1 & 2. Run Object Detection and Tracking
-        results = self.pipeline.run_detector(frame)
+        results = self.pipeline.run_detector(frame, track=self.use_tracking)
         
         if results and results.boxes:
             boxes = results.boxes.xyxy.cpu().numpy()
             confidences = results.boxes.conf.cpu().numpy()
+            if self.use_tracking:
+                # ByteTrack only reports IDs for confirmed tracks; unconfirmed boxes are skipped this frame
+                track_ids = results.boxes.id.int().cpu().tolist() if results.boxes.id is not None else [None] * len(boxes)
+            else:
+                track_ids = [1] * len(boxes)  # Global Track ID 1: all cats share one history
             
-            frame_max_prey_conf = 0.0
             prey_results = []
             
-            for box, cat_conf in zip(boxes, confidences):
-                # 3. Run Prey Object Detector on the crop
+            for box, cat_conf, track_id in zip(boxes, confidences, track_ids):
+                if track_id is None:
+                    continue
+                # 3. Run prey segmentation on the (bottom-extended) face crop
                 prey_confidence, crop_img = self.pipeline.run_prey_detector(frame, box)
                 if crop_img is not None:
                     self.latest_crop = crop_img
-                    
-                frame_max_prey_conf = max(frame_max_prey_conf, prey_confidence)
-                prey_results.append((box, cat_conf, prey_confidence))
+                prey_results.append((box, cat_conf, prey_confidence, track_id))
                 
-            # 4. Update State Machine ONCE for the whole frame (Global Track ID 1)
-            # This completely eliminates tracking ID reset bugs caused by low FPS!
-            current_state = self.state_machine.update(1, frame_max_prey_conf, frame_idx)
+            # 4. Update State Machine
+            if self.use_tracking:
+                # One update per tracked cat -> separate confidence history per cat
+                for box, cat_conf, prey_confidence, track_id in prey_results:
+                    self.state_machine.update(track_id, prey_confidence, frame_idx)
+            elif prey_results:
+                # One update for the whole frame (highest prey confidence of all cats)
+                frame_max_prey_conf = max(p[2] for p in prey_results)
+                self.state_machine.update(1, frame_max_prey_conf, frame_idx)
             
-            history_len = len(self.state_machine.tracks[1].confidence_history) if 1 in self.state_machine.tracks else 0
-            print(f"[Frame {frame_idx}] Cat detected! Prey Conf: {frame_max_prey_conf:.2f} | State: {current_state.value} | History: {history_len}/5")
-            
-            # Hard Negative Mining & Drawing
-            for box, cat_conf, prey_confidence in prey_results:
+            for box, cat_conf, prey_confidence, track_id in prey_results:
+                current_state = self.state_machine.get_state(track_id)
+                history_len = len(self.state_machine.tracks[track_id].confidence_history) if track_id in self.state_machine.tracks else 0
+                print(f"[Frame {frame_idx}] Cat {track_id} | Prey Conf: {prey_confidence:.2f} | State: {current_state.value} | History: {history_len}/{self.state_machine.history_length}")
+                
+                # Hard Negative Mining (per track, at most every 30 frames)
                 if self.save_uncertain_dir and 0.3 <= prey_confidence <= 0.6:
-                    if 1 not in self.last_saved_frame or (frame_idx - self.last_saved_frame[1]) > 30:
-                        filename = os.path.join(self.save_uncertain_dir, f"uncertain_f{frame_idx}_conf{prey_confidence:.2f}.jpg")
+                    if track_id not in self.last_saved_frame or (frame_idx - self.last_saved_frame[track_id]) > 30:
+                        filename = os.path.join(self.save_uncertain_dir, f"uncertain_f{frame_idx}_id{track_id}_conf{prey_confidence:.2f}.jpg")
                         cv2.imwrite(filename, pristine_frame)
-                        self.last_saved_frame[1] = frame_idx
+                        self.last_saved_frame[track_id] = frame_idx
                 
                 # Draw results on frame
-                draw_info(frame, box, 1, current_state, prey_confidence, cat_conf)
+                draw_info(frame, box, track_id, current_state, prey_confidence, cat_conf)
         else:
             # If we want to debug silent frames (Optional, can be spammy)
             if frame_idx % 10 == 0:

@@ -50,11 +50,11 @@ def on_access_state_changed(access_state):
             auto_lock_timer.cancel()
             auto_lock_timer = None
 
-def camera_loop(save_uncertain_dir):
+def camera_loop(save_uncertain_dir, use_tracking=True):
     """Background thread that continuously processes frames from the Catflap."""
     global current_frame_mjpeg
     
-    processor = CatFlapProcessor(save_uncertain_dir=save_uncertain_dir)
+    processor = CatFlapProcessor(save_uncertain_dir=save_uncertain_dir, use_tracking=use_tracking)
     # Subscribe to state changes to trigger the flap hardware
     processor.state_machine.subscribe(on_access_state_changed)
     
@@ -174,6 +174,7 @@ if __name__ == "__main__":
     parser.add_argument("--video", type=str, default=None, help="Optional: Path to an input video file to use instead of the camera")
     parser.add_argument("--simulate-servo", action="store_true", help="Run without initializing the physical servo motor")
     parser.add_argument("--flip", action="store_true", help="Flip the camera feed 180 degrees")
+    parser.add_argument("--no-tracking", dest="no_tracking", action="store_true", help="Disable ByteTrack; all cats share one global history")
     args = parser.parse_args()
     
     # Initialize the central Catflap hardware
@@ -189,7 +190,7 @@ if __name__ == "__main__":
     # Start the camera processing loop in a background thread
     pipeline_thread = threading.Thread(
         target=camera_loop, 
-        args=(args.save_uncertain if args.save_uncertain else None,),
+        args=(args.save_uncertain if args.save_uncertain else None, not args.no_tracking),
         daemon=True # Daemon thread dies when the main Flask app dies
     )
     pipeline_thread.start()
