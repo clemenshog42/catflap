@@ -63,14 +63,18 @@ def run_two_stage(pipeline, path, args, writer, name):
         boxes = res.boxes.xyxy.cpu().numpy()
         confs = res.boxes.conf.cpu().numpy()
         ids = res.boxes.id.int().cpu().tolist() if (args.tracking and res.boxes.id is not None) else [None] * len(boxes)
+        written = 0
         for box, conf, tid in zip(boxes, confs, ids):
             if args.tracking and tid is None:
-                continue
+                continue  # ByteTrack has not confirmed this detection yet; the pipeline ignores it as well
             prey_conf, _ = pipeline.run_prey_detector(frame, box)  # colour mode handled inside the pipeline
             writer.writerow({"video": name, "frame": idx, "time_s": f"{t:.3f}",
                              "track_id": tid if args.tracking else 1,
                              "x1": int(box[0]), "y1": int(box[1]), "x2": int(box[2]), "y2": int(box[3]),
                              "det_conf": f"{conf:.4f}", "prey_conf": f"{prey_conf:.4f}"})
+            written += 1
+        if written == 0:  # keep every processed frame in the log, otherwise the frame is lost for the evaluation
+            writer.writerow({"video": name, "frame": idx, "time_s": f"{t:.3f}", "track_id": ""})
 
 
 def run_one_stage(model, path, args, writer, name):
@@ -86,9 +90,11 @@ def run_one_stage(model, path, args, writer, name):
             writer.writerow({"video": name, "frame": idx, "time_s": f"{t:.3f}", "track_id": ""})
             continue
         ids = res.boxes.id.int().cpu().tolist() if (args.tracking and res.boxes.id is not None) else [None] * len(res.boxes)
+        written = 0
         for b, tid in zip(res.boxes, ids):
             if args.tracking and tid is None:
                 continue
+            written += 1
             cls_name = res.names[int(b.cls[0])].lower()
             conf = float(b.conf[0])
             is_prey = ("prey" in cls_name and "no" not in cls_name and "without" not in cls_name)
@@ -98,6 +104,8 @@ def run_one_stage(model, path, args, writer, name):
                              "track_id": tid if args.tracking else 1,
                              "x1": x1, "y1": y1, "x2": x2, "y2": y2,
                              "det_conf": f"{conf:.4f}", "prey_conf": f"{prey_conf:.4f}"})
+        if written == 0:
+            writer.writerow({"video": name, "frame": idx, "time_s": f"{t:.3f}", "track_id": ""})
 
 
 def main():

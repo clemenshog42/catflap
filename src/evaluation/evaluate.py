@@ -14,16 +14,15 @@ A frame "needs a lock" if any visible cat carries prey.
 Door model: the flap is locked by default; it is only open after the state machine
 emitted GRANTED and before the next DENIED (or before all cats left the image).
 
-Metrics per video and configuration
-  safety_errors     : frames in which the door is open although a cat with prey is visible
-  comfort_errors    : frames in which the door is locked although only clean cats are visible,
-                      counted after the allowed decision time (--grace seconds after the cat appeared)
-  prey_passed       : 1 if a cat with prey had the door open at least once (event level)
-  clean_locked_out  : 1 if a clean cat never got the door opened while visible (event level)
-  missed_cat_frames : frames with a recognisable cat face (face_visible) in which no cat was detected
-  latency_s         : time from first visibility to the first correct decision
-                      (DENIED for prey videos, GRANTED for clean videos); empty if never reached
-  frame-level precision / recall / F1 of the decision "lock" over all frames with a visible cat
+Metrics (per video and summed over all videos)
+  safety errors   : frames in which the door is open although a cat with prey is visible
+  comfort errors  : frames in which the door is locked although only clean cats are visible,
+                    counted only after the decision time (--grace seconds after the cat face appeared)
+  precision / recall / F1 of the decision "lock" (clean frames inside the decision time are excluded)
+  prey passed     : the door was open at least once while a cat with prey was visible (event level)
+  locked out      : a clean cat never got the door opened (event level)
+  decision time   : seconds from the cat face appearing to the first DENIED (prey videos) or GRANTED (clean videos)
+  missed cats     : frames with a recognisable cat face (face_visible) in which no cat was detected
 
 Usage (from code/):
   python src/evaluation/evaluate.py --run results/raw/two_stage_track_grayscale --history 5 --threshold 0.5
@@ -54,16 +53,20 @@ def load_gt(video):
 
 
 def replay(df, history, threshold, max_missed_s=4.0, fps=8.0):
-    """Replays the state machine; returns a list of (time_s, door_open, cat_detected) per processed frame."""
+    """Replays the state machine.
+    Returns the timeline [(time_s, door_open, cat_detected)] and the emitted decisions [(time_s, AccessState)]."""
     sm = StateMachine(history_length=history, threshold=threshold, max_missed_frames=int(round(max_missed_s * fps)))
-    door = {"open": False}
+    door = {"open": False, "t": 0.0}
+    decisions = []
 
     def cb(state):
         door["open"] = (state == AccessState.GRANTED)
+        decisions.append((door["t"], state))
     sm.subscribe(cb)
 
-    out = []
+    timeline = []
     for (frame, t), rows in df.groupby(["frame", "time_s"], sort=True):
+        door["t"] = float(t)
         detected = False
         for _, r in rows.iterrows():
             if pd.notna(r["track_id"]) and r["track_id"] != "":
@@ -72,18 +75,18 @@ def replay(df, history, threshold, max_missed_s=4.0, fps=8.0):
         sm.process_global_state(int(frame), current_time=float(t))
         if len(sm.tracks) == 0:
             door["open"] = False  # flap auto-locks when no cat is present
-        out.append((float(t), door["open"], detected))
-    return out
+        timeline.append((float(t), door["open"], detected))
+    return timeline, decisions
 
 
-def score(video, timeline, gt, grace):
+def score(video, timeline, decisions, gt, grace):
     cats = gt["cats"]
     # decision time is measured from the moment a cat face is recognisable (face_visible), else from first visibility
-    first_seen = min((iv[0] for c in cats for iv in c.get("face_visible", c["visible"])), default=None)
-    has_prey_video = any(c.get("prey") for c in cats)
-    m = dict(video=video, frames=0, cat_frames=0, safety_errors=0, comfort_errors=0,
-             tp=0, fp=0, fn=0, tn=0, prey_passed=0, clean_locked_out=0, latency_s=None,
-             face_frames=0, missed_cat_frames=0)
+    first_seen = min((iv[0] for c in cats for iv in c.get("face_visible", c["visible"])), default=0.0)
+    prey_video = any(c.get("prey") for c in cats)
+    m = dict(video=video, category="with_prey" if prey_video else "no_prey", frames=0,
+             tp=0, fp=0, fn=0, tn=0, safety_errors=0, comfort_errors=0, prey_frames=0, clean_frames=0,
+             face_frames=0, missed_cat_frames=0, prey_passed=0, locked_out=0, decision_time_s=None)
     ever_open_while_clean = False
     for t, is_open, detected in timeline:
         m["frames"] += 1
@@ -93,26 +96,28 @@ def score(video, timeline, gt, grace):
         visible = [c for c in cats if in_any(t, c["visible"])]
         if not visible:
             continue
-        m["cat_frames"] += 1
         need_lock = any(in_any(t, c.get("prey", [])) for c in visible)
         locked = not is_open
-        if need_lock and not locked:
-            m["safety_errors"] += 1
-            m["prey_passed"] = 1
-        if not need_lock and locked and first_seen is not None and t - first_seen > grace:
-            m["comfort_errors"] += 1
-        if not need_lock and is_open:
-            ever_open_while_clean = True
-        m["tp"] += need_lock and locked
-        m["fn"] += need_lock and not locked
-        m["fp"] += (not need_lock) and locked
-        m["tn"] += (not need_lock) and not locked
-        if m["latency_s"] is None and first_seen is not None:
-            if (has_prey_video and need_lock and locked) or (not has_prey_video and is_open):
-                m["latency_s"] = round(t - first_seen, 3)
-    if not has_prey_video and m["cat_frames"] > 0 and not ever_open_while_clean:
-        m["clean_locked_out"] = 1
-    m["category"] = "with_prey" if has_prey_video else "no_prey"
+        if need_lock:
+            m["prey_frames"] += 1
+            m["tp"] += locked
+            m["fn"] += not locked
+            m["safety_errors"] += not locked
+            m["prey_passed"] = max(m["prey_passed"], int(not locked))
+        else:
+            ever_open_while_clean |= is_open
+            if t - first_seen <= grace:
+                continue  # the state machine is still allowed to collect its history
+            m["clean_frames"] += 1
+            m["fp"] += locked
+            m["tn"] += not locked
+            m["comfort_errors"] += locked
+    if not prey_video and m["clean_frames"] > 0 and not ever_open_while_clean:
+        m["locked_out"] = 1
+    target = AccessState.DENIED if prey_video else AccessState.GRANTED
+    hit = next((t for t, s in decisions if s == target), None)
+    if hit is not None:
+        m["decision_time_s"] = round(max(0.0, hit - first_seen), 2)
     return m
 
 
@@ -121,28 +126,78 @@ def evaluate_run(run_dir, history, threshold, grace):
     for csv_path in sorted(glob.glob(os.path.join(run_dir, "*.csv"))):
         df = pd.read_csv(csv_path, dtype={"track_id": "string"})
         video = df["video"].iloc[0]
-        timeline = replay(df, history, threshold)
-        m = score(video, timeline, load_gt(video), grace)
+        timeline, decisions = replay(df, history, threshold)
+        m = score(video, timeline, decisions, load_gt(video), grace)
         m.update(history=history, threshold=threshold)
         rows.append(m)
     return pd.DataFrame(rows)
 
 
+def ratio(a, b):
+    return a / b if b else float("nan")
+
+
 def summarize(res):
     tp, fp, fn = res.tp.sum(), res.fp.sum(), res.fn.sum()
-    prec = tp / (tp + fp) if tp + fp else float("nan")
-    rec = tp / (tp + fn) if tp + fn else float("nan")
-    f1 = 2 * prec * rec / (prec + rec) if prec + rec else float("nan")
+    prec, rec = ratio(tp, tp + fp), ratio(tp, tp + fn)
     prey = res[res.category == "with_prey"]
     clean = res[res.category == "no_prey"]
-    return dict(precision=round(prec, 3), recall=round(rec, 3), f1=round(f1, 3),
-                safety_error_rate=round(res.safety_errors.sum() / max(1, (res.tp + res.fn).sum()), 3),
-                comfort_error_rate=round(res.comfort_errors.sum() / max(1, (res.fp + res.tn).sum()), 3),
-                prey_passed=f"{int(prey.prey_passed.sum())}/{len(prey)}",
-                clean_locked_out=f"{int(clean.clean_locked_out.sum())}/{len(clean)}",
-                latency_prey_s=round(prey.latency_s.dropna().mean(), 2) if len(prey) else None,
-                latency_clean_s=round(clean.latency_s.dropna().mean(), 2) if len(clean) else None,
-                missed_cat_rate=round(res.missed_cat_frames.sum() / max(1, res.face_frames.sum()), 3))
+    return {
+        "precision": prec,
+        "recall": rec,
+        "f1": ratio(2 * prec * rec, prec + rec),
+        "safety_error_rate": ratio(res.safety_errors.sum(), res.prey_frames.sum()),
+        "comfort_error_rate": ratio(res.comfort_errors.sum(), res.clean_frames.sum()),
+        "missed_cat_rate": ratio(res.missed_cat_frames.sum(), res.face_frames.sum()),
+        "prey_passed": int(prey.prey_passed.sum()), "prey_videos": len(prey),
+        "locked_out": int(clean.locked_out.sum()), "clean_videos": len(clean),
+        "decision_time_prey_s": prey.decision_time_s.dropna().mean() if len(prey) else float("nan"),
+        "decision_time_clean_s": clean.decision_time_s.dropna().mean() if len(clean) else float("nan"),
+    }
+
+
+# ---------- human readable output ----------
+
+def pct(x):
+    return "   -   " if pd.isna(x) else f"{100 * x:6.1f} %"
+
+
+def sec(x):
+    return "  -  " if x is None or pd.isna(x) else f"{x:4.1f} s"
+
+
+def print_table(headers, rows):
+    widths = [max(len(str(h)), *(len(str(r[i])) for r in rows)) for i, h in enumerate(headers)]
+    line = "  ".join(str(h).ljust(w) for h, w in zip(headers, widths))
+    print(line)
+    print("-" * len(line))
+    for r in rows:
+        print("  ".join(str(c).ljust(w) for c, w in zip(r, widths)))
+
+
+def print_report(run, res, history, threshold, grace):
+    print(f"\nRun: {run}   |   Zeitfenster: {history} Bilder   |   Schwellenwert: {threshold}   |   Entscheidungszeit erlaubt: {grace} s\n")
+    rows = []
+    for _, r in res.iterrows():
+        if r.category == "with_prey":
+            errors = f"{r.safety_errors}/{r.prey_frames} Bilder offen"
+            outcome = "BEUTE DURCHGELASSEN" if r.prey_passed else "ok"
+        else:
+            errors = f"{r.comfort_errors}/{r.clean_frames} Bilder gesperrt"
+            outcome = "AUSGESPERRT" if r.locked_out else "ok"
+        rows.append([r.video, "mit Beute" if r.category == "with_prey" else "ohne Beute", errors,
+                     f"{r.missed_cat_frames}/{r.face_frames}", sec(r.decision_time_s), outcome])
+    print_table(["Video", "Kategorie", "Fehler", "Katze übersehen", "Entscheidung nach", "Ergebnis"], rows)
+
+    s = summarize(res)
+    print("\nZusammenfassung")
+    print(f"  Sicherheitsfehler (offen trotz Beute):        {pct(s['safety_error_rate'])}")
+    print(f"  Komfortfehler (gesperrt obwohl sauber):       {pct(s['comfort_error_rate'])}")
+    print(f"  Präzision / Trefferquote / F1 (sperren):      {pct(s['precision'])} / {pct(s['recall'])} / {pct(s['f1'])}")
+    print(f"  Übersehene Katzen:                            {pct(s['missed_cat_rate'])}")
+    print(f"  Beute durchgelassen:                          {s['prey_passed']} von {s['prey_videos']} Videos")
+    print(f"  Saubere Katze ausgesperrt:                    {s['locked_out']} von {s['clean_videos']} Videos")
+    print(f"  Mittlere Entscheidungszeit mit / ohne Beute:  {sec(s['decision_time_prey_s'])} / {sec(s['decision_time_clean_s'])}\n")
 
 
 def main():
@@ -162,16 +217,23 @@ def main():
         summary = []
         for h in [1, 3, 5, 8, 10, 15, 20]:
             for th in [0.3, 0.4, 0.5, 0.6, 0.7, 0.8]:
-                res = evaluate_run(args.run, h, th, args.grace)
-                summary.append(dict(history=h, threshold=th, **summarize(res)))
+                s = summarize(evaluate_run(args.run, h, th, args.grace))
+                summary.append(dict(history=h, threshold=th, **s))
         out = pd.DataFrame(summary)
-        out.to_csv(os.path.join(out_dir, f"{run}_sweep.csv"), index=False)
-        print(out.to_string(index=False))
+        path = os.path.join(out_dir, f"{run}_sweep.csv")
+        out.to_csv(path, index=False)
+        print(f"\nParameterreihe für {run}  (alle Werte über alle Videos)\n")
+        print_table(["Fenster", "Schwelle", "Sicherheitsf.", "Komfortf.", "F1", "Beute durch", "Ausgesperrt", "Entsch. Beute", "Entsch. sauber"],
+                    [[r.history, r.threshold, pct(r.safety_error_rate), pct(r.comfort_error_rate), pct(r.f1),
+                      f"{r.prey_passed}/{r.prey_videos}", f"{r.locked_out}/{r.clean_videos}",
+                      sec(r.decision_time_prey_s), sec(r.decision_time_clean_s)] for r in out.itertuples()])
+        print(f"\nGespeichert: {path}\n")
     else:
         res = evaluate_run(args.run, args.history, args.threshold, args.grace)
-        res.to_csv(os.path.join(out_dir, f"{run}_h{args.history}_t{args.threshold}.csv"), index=False)
-        print(res.to_string(index=False))
-        print(summarize(res))
+        path = os.path.join(out_dir, f"{run}_h{args.history}_t{args.threshold}.csv")
+        res.to_csv(path, index=False)
+        print_report(run, res, args.history, args.threshold, args.grace)
+        print(f"Details gespeichert: {path}\n")
 
 
 if __name__ == "__main__":
