@@ -4,5 +4,3 @@ __pycache__/
 .ipynb_checkpoints/
 .env
 
-# Thesis lives in its own repo
-thesis/
