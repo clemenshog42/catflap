@@ -9,6 +9,22 @@ try:
 except ImportError:
     pass
 from ultralytics import YOLO
+import json
+import zipfile
+
+
+def _task_from_metadata(model_path):
+    """Ultralytics cannot guess the task of exported models (e.g. .tflite) from the file name and falls back
+    to 'detect', which decodes a segmentation output wrongly. Exported files carry their task in the embedded
+    metadata.json, so read it from there. Returns None for .pt files, where Ultralytics infers it itself."""
+    try:
+        if zipfile.is_zipfile(model_path):
+            with zipfile.ZipFile(model_path) as z:
+                if "metadata.json" in z.namelist():
+                    return json.loads(z.read("metadata.json")).get("task")
+    except (OSError, ValueError):
+        pass
+    return None
 
 class CatFlapPipeline:
     def __init__(self, detector_path="path/to/cat_face_detector.pt", classifier_path="path/to/prey_classifier.pt", apply_clahe_detector=False, apply_clahe_classifier=True, color_mode_detector="grayscale", color_mode_classifier="grayscale"):
@@ -20,14 +36,14 @@ class CatFlapPipeline:
         self.classifier_path = classifier_path
         print(f"Loading Object Detector from: {detector_path}")
         try:
-            self.detector = YOLO(detector_path)
+            self.detector = YOLO(detector_path, task=_task_from_metadata(detector_path))
         except Exception as e:
             print(f"Warning: Failed to load detector. Make sure the path is correct. Error: {e}")
             self.detector = None
             
         print(f"Loading Prey Model from: {classifier_path}")
         try:
-            self.classifier = YOLO(classifier_path)
+            self.classifier = YOLO(classifier_path, task=_task_from_metadata(classifier_path))
         except Exception as e:
             print(f"Warning: Failed to load prey model. Make sure the path is correct. Error: {e}")
             self.classifier = None
