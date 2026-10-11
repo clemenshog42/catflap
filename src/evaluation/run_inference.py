@@ -13,7 +13,7 @@ Usage (from code/):
   python src/evaluation/run_inference.py --config two_stage
   python src/evaluation/run_inference.py --config two_stage --no-tracking
   python src/evaluation/run_inference.py --config one_stage --one-stage-model models/1stage_ablation.pt
-  python src/evaluation/run_inference.py --config two_stage --color rgb --tag colour   (grayscale ablation)
+  python src/evaluation/run_inference.py --config two_stage --segmenter models/prey_rgb.pt --seg-color rgb --tag rgbseg   (grayscale ablation)
 """
 import argparse
 import csv
@@ -116,6 +116,8 @@ def main():
     ap.add_argument("--fps", type=float, default=8.0, help="simulated Raspberry Pi frame rate")
     ap.add_argument("--no-tracking", dest="tracking", action="store_false")
     ap.add_argument("--color", choices=["grayscale", "rgb"], default="grayscale")
+    ap.add_argument("--seg-color", dest="seg_color", choices=["grayscale", "rgb"], default=None,
+                    help="colour mode of the segmentation model only (default: same as --color); the face detector keeps --color")
     ap.add_argument("--detector", default=os.path.join(CODE_DIR, "models", "cat_face.tflite"))
     ap.add_argument("--segmenter", default=os.path.join(CODE_DIR, "models", "prey_gray.pt"))
     ap.add_argument("--one-stage-model", default=os.path.join(CODE_DIR, "models", "1stage_ablation.pt"))
@@ -128,7 +130,7 @@ def main():
 
     if args.config == "two_stage":
         pipeline = CatFlapPipeline(args.detector, args.segmenter, apply_clahe_detector=False, apply_clahe_classifier=False,
-                                   color_mode_detector=args.color, color_mode_classifier=args.color)
+                                   color_mode_detector=args.color, color_mode_classifier=args.seg_color or args.color)
     else:
         from ultralytics import YOLO
         model = YOLO(args.one_stage_model)
