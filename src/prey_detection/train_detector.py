@@ -73,9 +73,10 @@ def inject_negatives(data_yaml, negatives_dir, num_negatives, face_model_path="m
     face_model = YOLO(face_model_path)
     
     successful_crops = 0
-    pad_w_ratio = 0.0  # From models.py
-    pad_top_ratio = -0.35
-    pad_bottom_ratio = 0.3
+    # Same crop as at inference time (models.py, run_prey_detector), so the negatives look like real inputs
+    pad_w_ratio = 0.8
+    pad_top_ratio = 0.0
+    pad_bottom_ratio = 2.0
     
     for img_path in all_negs:
         if successful_crops >= num_negatives:
