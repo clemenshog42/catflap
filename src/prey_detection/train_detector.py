@@ -43,11 +43,23 @@ def inject_negatives(data_yaml, negatives_dir, num_negatives, face_model_path="m
     
     # Resolve target directories
     def get_split_dir(split_name):
+        """Roboflow exports write e.g. 'train: ../train/images' although the folder lies next to data.yaml.
+        Try the usual layouts and only return a directory that really exists."""
         if split_name not in data: return None
-        split_path = base_dir / data[split_name]
-        if not split_path.exists(): split_path = Path(data[split_name])
-        if split_path.is_file(): return split_path.parent
-        return split_path
+        rel = str(data[split_name])
+        candidates = [base_dir / rel,
+                      base_dir / rel.lstrip("./").lstrip("../"),
+                      base_dir / Path(rel).parent.name / Path(rel).name,
+                      Path(rel)]
+        if "path" in data:
+            candidates.insert(0, Path(data["path"]) / rel)
+        for c in candidates:
+            c = c.resolve()
+            if c.is_file():
+                c = c.parent
+            if c.is_dir():
+                return c
+        return None
 
     train_dir = get_split_dir('train')
     val_dir = get_split_dir('val')
@@ -56,6 +68,7 @@ def inject_negatives(data_yaml, negatives_dir, num_negatives, face_model_path="m
         print("❌ Could not resolve train/val directories from yaml!")
         return
 
+    print(f"📁 Negatives go to train: {train_dir} | val: {val_dir}")
     print(f"💉 Searching {len(all_negs)} negative images for cats using {face_model_path}...")
     face_model = YOLO(face_model_path)
     
@@ -110,7 +123,8 @@ def inject_negatives(data_yaml, negatives_dir, num_negatives, face_model_path="m
             # Save the cropped negative
             filename = f"{img_path.stem}_negcat{box_idx}{img_path.suffix}"
             target_dir = val_dir if random.random() < 0.2 else train_dir
-            cv2.imwrite(str(target_dir / filename), crop_img)
+            if not cv2.imwrite(str(target_dir / filename), crop_img):
+                raise RuntimeError(f"Could not write negative crop to {target_dir / filename}")
             
             successful_crops += 1
             if successful_crops >= num_negatives:
