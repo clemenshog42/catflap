@@ -21,3 +21,5 @@ models/*
 !models/cat_face_2609.pt
 !models/cat_prey_2609_v7.pt
 !models/1stage_ablation.pt
+!models/prey_gray.pt
+!models/prey_rgb.pt
