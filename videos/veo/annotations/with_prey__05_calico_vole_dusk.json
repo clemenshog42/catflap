@@ -1,0 +1,28 @@
+{
+  "video": "with_prey/05_calico_vole_dusk.mp4",
+  "duration_s": 10.0,
+  "notes": "Calico cat on a brick doorstep at dusk carrying a vole. Face interval estimated from frames sampled every 1.5 s; the cat passes under the camera at the end.",
+  "cats": [
+    {
+      "id": "A",
+      "visible": [
+        [
+          0.0,
+          10.0
+        ]
+      ],
+      "face_visible": [
+        [
+          2.0,
+          8.5
+        ]
+      ],
+      "prey": [
+        [
+          0.0,
+          10.0
+        ]
+      ]
+    }
+  ]
+}

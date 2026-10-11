@@ -1,0 +1,23 @@
+{
+  "video": "no_prey/04_tabby_overcast.mp4",
+  "duration_s": 10.0,
+  "notes": "Counterpart of with_prey/04_tabby_rat_overcast without prey. Face interval estimated from frames sampled every 1.5 s; the cat passes under the camera at the end.",
+  "cats": [
+    {
+      "id": "A",
+      "visible": [
+        [
+          0.0,
+          10.0
+        ]
+      ],
+      "face_visible": [
+        [
+          2.0,
+          8.5
+        ]
+      ],
+      "prey": []
+    }
+  ]
+}

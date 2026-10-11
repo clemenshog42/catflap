@@ -1,0 +1,28 @@
+{
+  "video": "with_prey/02_black_mouse_day.mp4",
+  "duration_s": 10.0,
+  "notes": "Black cat on a wooden deck, mouse is dark and small (best visible ~4.5-7.5 s). Face interval estimated from frames sampled every 1.5 s; the cat passes under the camera at the end.",
+  "cats": [
+    {
+      "id": "A",
+      "visible": [
+        [
+          0.0,
+          10.0
+        ]
+      ],
+      "face_visible": [
+        [
+          2.0,
+          8.5
+        ]
+      ],
+      "prey": [
+        [
+          0.0,
+          10.0
+        ]
+      ]
+    }
+  ]
+}

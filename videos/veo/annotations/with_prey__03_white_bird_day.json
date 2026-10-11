@@ -1,0 +1,28 @@
+{
+  "video": "with_prey/03_white_bird_day.mp4",
+  "duration_s": 10.0,
+  "notes": "White cat on a gravel path carrying a sparrow. Face interval estimated from frames sampled every 1.5 s; the cat passes under the camera at the end.",
+  "cats": [
+    {
+      "id": "A",
+      "visible": [
+        [
+          0.0,
+          10.0
+        ]
+      ],
+      "face_visible": [
+        [
+          2.0,
+          8.5
+        ]
+      ],
+      "prey": [
+        [
+          0.0,
+          10.0
+        ]
+      ]
+    }
+  ]
+}
