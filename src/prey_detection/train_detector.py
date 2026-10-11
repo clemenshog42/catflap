@@ -134,7 +134,7 @@ def inject_negatives(data_yaml, negatives_dir, num_negatives, face_model_path="m
     print(f"✅ Successfully injected {successful_crops} cropped negative cat faces!")
 
 
-def train_model(data_yaml, epochs=50, imgsz=224, batch=16, project="prey_detector", color_mode="rgb", apply_clahe=False, negatives_dir=None, num_negatives=0, face_model_path="models/cat_face_2609.pt"):
+def train_model(data_yaml, epochs=50, imgsz=224, batch=16, project="prey_detector", color_mode="rgb", apply_clahe=False, negatives_dir=None, num_negatives=0, face_model_path="models/cat_face_2609.pt", patience=50):
     device = 0 if torch.cuda.is_available() else "cpu"
     print(f"🚀 Training on device: {device}")
     
@@ -159,7 +159,7 @@ def train_model(data_yaml, epochs=50, imgsz=224, batch=16, project="prey_detecto
             imgsz=imgsz,
             batch=batch,
             device=device,
-            patience=10,
+            patience=patience,  # small validation set -> noisy mAP, so do not stop too early
             project=project,
             mosaic=0.0,      # Disable 4-image stitching to preserve small prey features
             fliplr=0.5,      # Left/Right flip
@@ -190,7 +190,8 @@ if __name__ == "__main__":
     parser.add_argument("--apply_clahe", action="store_true", help="Apply CLAHE")
     parser.add_argument("--negatives_dir", default=None, help="Directory containing images of cats with NO prey to use as background negatives.")
     parser.add_argument("--num_negatives", type=int, default=0, help="Number of negative images to randomly inject into the dataset.")
+    parser.add_argument("--patience", type=int, default=50, help="Early stopping patience in epochs")
     parser.add_argument("--face_model", default="models/cat_face_2609.pt", help="Path to the YOLO face model to crop the negatives.")
     
     args = parser.parse_args()
-    train_model(args.data_yaml, args.epochs, args.imgsz, args.batch, args.project, args.color, args.apply_clahe, args.negatives_dir, args.num_negatives, args.face_model)
+    train_model(args.data_yaml, args.epochs, args.imgsz, args.batch, args.project, args.color, args.apply_clahe, args.negatives_dir, args.num_negatives, args.face_model, args.patience)
