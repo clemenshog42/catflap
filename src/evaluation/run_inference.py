@@ -117,7 +117,7 @@ def main():
     ap.add_argument("--no-tracking", dest="tracking", action="store_false")
     ap.add_argument("--color", choices=["grayscale", "rgb"], default="grayscale")
     ap.add_argument("--detector", default=os.path.join(CODE_DIR, "models", "cat_face.tflite"))
-    ap.add_argument("--segmenter", default=os.path.join(CODE_DIR, "models", "cat_prey.tflite"))
+    ap.add_argument("--segmenter", default=os.path.join(CODE_DIR, "models", "prey_gray.pt"))
     ap.add_argument("--one-stage-model", default=os.path.join(CODE_DIR, "models", "1stage_ablation.pt"))
     ap.add_argument("--tag", default="", help="extra name for the output folder")
     args = ap.parse_args()

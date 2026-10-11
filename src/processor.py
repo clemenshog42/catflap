@@ -40,7 +40,7 @@ class CatFlapProcessor:
         self.use_tracking = use_tracking
         self.pipeline = CatFlapPipeline(
             detector_path="models/cat_face.tflite",
-            classifier_path="models/cat_prey.tflite",
+            classifier_path="models/prey_gray.pt",
             apply_clahe_detector=False,
             apply_clahe_classifier=False,
             color_mode_detector="grayscale",
