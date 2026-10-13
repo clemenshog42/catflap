@@ -122,6 +122,7 @@ def main():
     ap.add_argument("--segmenter", default=os.path.join(CODE_DIR, "models", "prey_gray.pt"))
     ap.add_argument("--one-stage-model", default=os.path.join(CODE_DIR, "models", "1stage_ablation.pt"))
     ap.add_argument("--tag", default="", help="extra name for the output folder")
+    ap.add_argument("--overwrite", action="store_true", help="recompute videos that already have a CSV")
     args = ap.parse_args()
 
     run_name = f"{args.config}_{'track' if args.tracking else 'notrack'}_{args.color}" + (f"_{args.tag}" if args.tag else "")
@@ -140,13 +141,18 @@ def main():
     for path in videos:
         name = f"{os.path.basename(os.path.dirname(path))}/{os.path.basename(path)}"
         csv_path = os.path.join(out_dir, name.replace("/", "__").replace(".mp4", ".csv"))
-        with open(csv_path, "w", newline="") as f:
+        if os.path.exists(csv_path) and not args.overwrite:
+            print("  skip (already done)", name)
+            continue
+        part_path = csv_path + ".part"  # only renamed to .csv once the video is complete
+        with open(part_path, "w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=FIELDS)
             writer.writeheader()
             if args.config == "two_stage":
                 run_two_stage(pipeline, path, args, writer, name)
             else:
                 run_one_stage(model, path, args, writer, name)
+        os.replace(part_path, csv_path)
         print("  done", name)
 
 
