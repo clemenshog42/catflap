@@ -117,7 +117,7 @@ class StateMachine:
             # If we are granting access (unlocking), ensure at least 5 seconds have passed since the last state change.
             # If we are denying access (locking due to prey), we do NOT wait, it is an emergency!
             is_emergency_lock = (access_state == AccessState.DENIED)
-            time_since_last_change = current_time - getattr(self, 'last_state_change_time', 0.0)
+            time_since_last_change = current_time - getattr(self, 'last_state_change_time', float('-inf'))  # no change yet -> no debounce
             
             if is_emergency_lock or time_since_last_change >= 5.0:
                 self.last_state = access_state
