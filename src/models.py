@@ -26,6 +26,14 @@ def _task_from_metadata(model_path):
         pass
     return None
 
+def _input_channels(yolo_model):
+    """Number of input channels of a loaded YOLO model (3 if unknown, e.g. for exported models)."""
+    try:
+        return int(yolo_model.model.yaml.get("channels", 3))
+    except AttributeError:
+        return 3
+
+
 class CatFlapPipeline:
     def __init__(self, detector_path="path/to/cat_face_detector.pt", classifier_path="path/to/prey_classifier.pt", apply_clahe_detector=False, apply_clahe_classifier=True, color_mode_detector="grayscale", color_mode_classifier="grayscale"):
         self.apply_clahe_detector = apply_clahe_detector
@@ -137,6 +145,10 @@ class CatFlapPipeline:
                 final_crop = cv2.cvtColor(gray_crop, cv2.COLOR_GRAY2BGR)
             else:
                 final_crop = square_crop
+            
+        # Models trained with 'channels: 1' (e.g. prey_gray.pt) expect a single-channel input
+        if _input_channels(self.classifier) == 1 and final_crop.ndim == 3:
+            final_crop = cv2.cvtColor(final_crop, cv2.COLOR_BGR2GRAY)[..., None]
             
         results = self.classifier(final_crop, verbose=False)
         
