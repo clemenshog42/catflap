@@ -1,0 +1,571 @@
+===== Evaluation started 13.10.2026 20:53:36,60 ===== 
+Loading Object Detector from: C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite
+Loading Prey Model from: C:\Public\Studium\Bachelorarbeit\code\models\prey_gray.pt
+20 videos -> C:\Public\Studium\Bachelorarbeit\code\results\raw\two_stage_track_grayscale
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+  done no_prey/01_orange_day.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done no_prey/02_black_day.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done no_prey/03_white_day.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done no_prey/04_tabby_overcast.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done no_prey/05_calico_dusk.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done no_prey/06_black_ir.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done no_prey/07_orange_ir.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done no_prey/08_grey_ir.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done no_prey/09_twocats_orange_black_day.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done no_prey/10_twocats_tabby_white_ir.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done with_prey/01_orange_mouse_day.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done with_prey/02_black_mouse_day.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done with_prey/03_white_bird_day.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done with_prey/04_tabby_rat_overcast.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done with_prey/05_calico_vole_dusk.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done with_prey/06_black_bird_ir.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done with_prey/07_orange_mouse_ir.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done with_prey/08_grey_rat_ir.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done with_prey/09_twocats_orange-mouse_black_day.mp4
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+  done with_prey/10_twocats_tabby-bird_white_ir.mp4
+Loading Object Detector from: C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite
+Loading Prey Model from: C:\Public\Studium\Bachelorarbeit\code\models\prey_gray.pt
+20 videos -> C:\Public\Studium\Bachelorarbeit\code\results\raw\two_stage_notrack_grayscale
+Loading C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite for TensorFlow Lite inference...
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+  done no_prey/01_orange_day.mp4
+  done no_prey/02_black_day.mp4
+  done no_prey/03_white_day.mp4
+  done no_prey/04_tabby_overcast.mp4
+  done no_prey/05_calico_dusk.mp4
+  done no_prey/06_black_ir.mp4
+  done no_prey/07_orange_ir.mp4
+  done no_prey/08_grey_ir.mp4
+  done no_prey/09_twocats_orange_black_day.mp4
+  done no_prey/10_twocats_tabby_white_ir.mp4
+  done with_prey/01_orange_mouse_day.mp4
+  done with_prey/02_black_mouse_day.mp4
+  done with_prey/03_white_bird_day.mp4
+  done with_prey/04_tabby_rat_overcast.mp4
+  done with_prey/05_calico_vole_dusk.mp4
+  done with_prey/06_black_bird_ir.mp4
+  done with_prey/07_orange_mouse_ir.mp4
+  done with_prey/08_grey_rat_ir.mp4
+  done with_prey/09_twocats_orange-mouse_black_day.mp4
+  done with_prey/10_twocats_tabby-bird_white_ir.mp4
+20 videos -> C:\Public\Studium\Bachelorarbeit\code\results\raw\one_stage_track_grayscale
+  skip (already done) no_prey/01_orange_day.mp4
+  skip (already done) no_prey/02_black_day.mp4
+  skip (already done) no_prey/03_white_day.mp4
+  skip (already done) no_prey/04_tabby_overcast.mp4
+  skip (already done) no_prey/05_calico_dusk.mp4
+  skip (already done) no_prey/06_black_ir.mp4
+  skip (already done) no_prey/07_orange_ir.mp4
+  skip (already done) no_prey/08_grey_ir.mp4
+  skip (already done) no_prey/09_twocats_orange_black_day.mp4
+  skip (already done) no_prey/10_twocats_tabby_white_ir.mp4
+  skip (already done) with_prey/01_orange_mouse_day.mp4
+  skip (already done) with_prey/02_black_mouse_day.mp4
+  skip (already done) with_prey/03_white_bird_day.mp4
+  skip (already done) with_prey/04_tabby_rat_overcast.mp4
+  skip (already done) with_prey/05_calico_vole_dusk.mp4
+  skip (already done) with_prey/06_black_bird_ir.mp4
+  skip (already done) with_prey/07_orange_mouse_ir.mp4
+  skip (already done) with_prey/08_grey_rat_ir.mp4
+  skip (already done) with_prey/09_twocats_orange-mouse_black_day.mp4
+  skip (already done) with_prey/10_twocats_tabby-bird_white_ir.mp4
+20 videos -> C:\Public\Studium\Bachelorarbeit\code\results\raw\one_stage_notrack_grayscale
+  skip (already done) no_prey/01_orange_day.mp4
+  skip (already done) no_prey/02_black_day.mp4
+  skip (already done) no_prey/03_white_day.mp4
+  skip (already done) no_prey/04_tabby_overcast.mp4
+  skip (already done) no_prey/05_calico_dusk.mp4
+  skip (already done) no_prey/06_black_ir.mp4
+  skip (already done) no_prey/07_orange_ir.mp4
+  skip (already done) no_prey/08_grey_ir.mp4
+  skip (already done) no_prey/09_twocats_orange_black_day.mp4
+  skip (already done) no_prey/10_twocats_tabby_white_ir.mp4
+  skip (already done) with_prey/01_orange_mouse_day.mp4
+  skip (already done) with_prey/02_black_mouse_day.mp4
+  skip (already done) with_prey/03_white_bird_day.mp4
+  skip (already done) with_prey/04_tabby_rat_overcast.mp4
+  skip (already done) with_prey/05_calico_vole_dusk.mp4
+  skip (already done) with_prey/06_black_bird_ir.mp4
+  skip (already done) with_prey/07_orange_mouse_ir.mp4
+  skip (already done) with_prey/08_grey_rat_ir.mp4
+  skip (already done) with_prey/09_twocats_orange-mouse_black_day.mp4
+  skip (already done) with_prey/10_twocats_tabby-bird_white_ir.mp4
+Loading Object Detector from: C:\Public\Studium\Bachelorarbeit\code\models\cat_face.tflite
+Loading Prey Model from: models\prey_rgb.pt
+20 videos -> C:\Public\Studium\Bachelorarbeit\code\results\raw\two_stage_track_grayscale_rgbseg
+  skip (already done) no_prey/01_orange_day.mp4
+  skip (already done) no_prey/02_black_day.mp4
+  skip (already done) no_prey/03_white_day.mp4
+  skip (already done) no_prey/04_tabby_overcast.mp4
+  skip (already done) no_prey/05_calico_dusk.mp4
+  skip (already done) no_prey/06_black_ir.mp4
+  skip (already done) no_prey/07_orange_ir.mp4
+  skip (already done) no_prey/08_grey_ir.mp4
+  skip (already done) no_prey/09_twocats_orange_black_day.mp4
+  skip (already done) no_prey/10_twocats_tabby_white_ir.mp4
+  skip (already done) with_prey/01_orange_mouse_day.mp4
+  skip (already done) with_prey/02_black_mouse_day.mp4
+  skip (already done) with_prey/03_white_bird_day.mp4
+  skip (already done) with_prey/04_tabby_rat_overcast.mp4
+  skip (already done) with_prey/05_calico_vole_dusk.mp4
+  skip (already done) with_prey/06_black_bird_ir.mp4
+  skip (already done) with_prey/07_orange_mouse_ir.mp4
+  skip (already done) with_prey/08_grey_rat_ir.mp4
+  skip (already done) with_prey/09_twocats_orange-mouse_black_day.mp4
+  skip (already done) with_prey/10_twocats_tabby-bird_white_ir.mp4
+
+Run: two_stage_track_grayscale   |   Zeitfenster: 5 Bilder   |   Schwellenwert: 0.5   |   Entscheidungszeit erlaubt: 3.0 s
+
+Video                                            Kategorie   Fehler                 Katze übersehen  Entscheidung nach  Ergebnis           
+-------------------------------------------------------------------------------------------------------------------------------------------
+no_prey/01_orange_day.mp4                        ohne Beute  3/39 Bilder gesperrt   0/51              3.0 s             ok                 
+no_prey/02_black_day.mp4                         ohne Beute  28/39 Bilder gesperrt  3/53              6.6 s             ok                 
+no_prey/03_white_day.mp4                         ohne Beute  13/39 Bilder gesperrt  4/53              3.0 s             ok                 
+no_prey/04_tabby_overcast.mp4                    ohne Beute  0/39 Bilder gesperrt   2/53              3.0 s             ok                 
+no_prey/05_calico_dusk.mp4                       ohne Beute  0/39 Bilder gesperrt   4/53              3.0 s             ok                 
+no_prey/06_black_ir.mp4                          ohne Beute  0/39 Bilder gesperrt   2/53              3.0 s             ok                 
+no_prey/07_orange_ir.mp4                         ohne Beute  0/39 Bilder gesperrt   5/53              3.0 s             ok                 
+no_prey/08_grey_ir.mp4                           ohne Beute  0/39 Bilder gesperrt   0/53              3.0 s             ok                 
+no_prey/09_twocats_orange_black_day.mp4          ohne Beute  0/39 Bilder gesperrt   3/64              3.0 s             ok                 
+no_prey/10_twocats_tabby_white_ir.mp4            ohne Beute  0/39 Bilder gesperrt   0/64              3.0 s             ok                 
+with_prey/01_orange_mouse_day.mp4                mit Beute   0/80 Bilder offen      0/51              0.0 s             ok                 
+with_prey/02_black_mouse_day.mp4                 mit Beute   10/80 Bilder offen     1/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/03_white_bird_day.mp4                  mit Beute   0/80 Bilder offen      2/53              0.0 s             ok                 
+with_prey/04_tabby_rat_overcast.mp4              mit Beute   4/80 Bilder offen      5/53              0.5 s             BEUTE DURCHGELASSEN
+with_prey/05_calico_vole_dusk.mp4                mit Beute   4/80 Bilder offen      4/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/06_black_bird_ir.mp4                   mit Beute   0/80 Bilder offen      4/53              0.0 s             ok                 
+with_prey/07_orange_mouse_ir.mp4                 mit Beute   26/80 Bilder offen     4/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/08_grey_rat_ir.mp4                     mit Beute   20/80 Bilder offen     0/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/09_twocats_orange-mouse_black_day.mp4  mit Beute   13/80 Bilder offen     3/64              4.6 s             BEUTE DURCHGELASSEN
+with_prey/10_twocats_tabby-bird_white_ir.mp4     mit Beute   15/80 Bilder offen     1/64              0.0 s             BEUTE DURCHGELASSEN
+
+Zusammenfassung
+  Sicherheitsfehler (offen trotz Beute):          11.5 %
+  Komfortfehler (gesperrt obwohl sauber):         11.3 %
+  Präzision / Trefferquote / F1 (sperren):        94.1 % /   88.5 % /   91.2 %
+  Übersehene Katzen:                               4.3 %
+  Beute durchgelassen:                          7 von 10 Videos
+  Saubere Katze ausgesperrt:                    0 von 10 Videos
+  Mittlere Entscheidungszeit mit / ohne Beute:   0.5 s /  3.4 s
+
+Details gespeichert: C:\Public\Studium\Bachelorarbeit\code\results\metrics\two_stage_track_grayscale_h5_t0.5.csv
+
+
+Parameterreihe für two_stage_track_grayscale  (alle Werte über alle Videos)
+
+Fenster  Schwelle  Sicherheitsf.  Komfortf.  F1        Beute durch  Ausgesperrt  Entsch. Beute  Entsch. sauber
+--------------------------------------------------------------------------------------------------------------
+1        0.3          4.4 %         20.0 %     93.1 %  9/10         0/10          0.0 s          3.7 s        
+1        0.4          4.9 %         20.0 %     92.9 %  9/10         0/10          0.0 s          3.7 s        
+1        0.5          5.6 %         20.5 %     92.4 %  9/10         0/10          0.5 s          3.7 s        
+1        0.6          5.8 %         21.0 %     92.2 %  9/10         0/10          0.5 s          3.8 s        
+1        0.7          7.1 %         21.0 %     91.4 %  10/10        0/10          0.5 s          3.8 s        
+1        0.8         11.0 %         21.0 %     89.3 %  10/10        0/10          0.6 s          3.8 s        
+3        0.3          3.8 %         20.8 %     93.3 %  7/10         0/10          0.0 s          3.7 s        
+3        0.4          4.1 %         21.0 %     93.0 %  7/10         0/10          0.0 s          3.8 s        
+3        0.5          5.2 %         21.3 %     92.4 %  7/10         0/10          0.5 s          3.8 s        
+3        0.6          8.1 %         13.1 %     92.7 %  8/10         0/10          0.5 s          3.4 s        
+3        0.7         12.5 %         11.3 %     90.7 %  8/10         0/10          0.5 s          3.4 s        
+3        0.8         17.1 %         11.3 %     88.0 %  10/10        0/10          0.1 s          3.4 s        
+5        0.3          4.6 %         21.5 %     92.7 %  7/10         0/10          0.0 s          3.8 s        
+5        0.4          4.9 %         21.3 %     92.6 %  7/10         0/10          0.0 s          3.8 s        
+5        0.5         11.5 %         11.3 %     91.2 %  7/10         0/10          0.5 s          3.4 s        
+5        0.6         12.6 %          4.1 %     92.3 %  8/10         0/10          0.5 s          3.0 s        
+5        0.7         12.8 %          4.1 %     92.2 %  8/10         0/10          0.6 s          3.0 s        
+5        0.8         14.4 %          4.1 %     91.3 %  8/10         0/10          0.4 s          3.0 s        
+8        0.3          5.1 %         19.5 %     92.8 %  7/10         0/10          0.0 s          3.8 s        
+8        0.4          7.6 %         14.1 %     92.7 %  7/10         1/10          0.1 s          3.0 s        
+8        0.5          9.5 %          4.1 %     94.0 %  7/10         0/10          0.6 s          3.0 s        
+8        0.6         10.9 %          4.1 %     93.3 %  7/10         0/10          0.6 s          3.0 s        
+8        0.7         12.1 %          4.1 %     92.6 %  8/10         0/10          0.6 s          3.0 s        
+8        0.8         18.0 %          4.1 %     89.1 %  8/10         0/10          0.4 s          3.0 s        
+10       0.3          3.8 %         14.1 %     94.8 %  6/10         1/10          0.1 s          3.0 s        
+10       0.4          5.6 %          4.1 %     96.1 %  7/10         0/10          0.1 s          3.0 s        
+10       0.5          6.2 %          4.1 %     95.8 %  7/10         0/10          0.5 s          3.0 s        
+10       0.6          9.1 %          4.1 %     94.2 %  7/10         0/10          0.6 s          3.0 s        
+10       0.7          8.9 %          4.1 %     94.4 %  7/10         0/10          0.7 s          3.0 s        
+10       0.8         20.4 %          4.1 %     87.7 %  8/10         0/10          0.4 s          3.0 s        
+15       0.3          1.4 %          4.1 %     98.3 %  3/10         0/10          0.1 s          3.0 s        
+15       0.4          3.0 %          4.1 %     97.5 %  3/10         0/10          0.2 s          3.0 s        
+15       0.5          7.9 %          4.1 %     94.9 %  4/10         0/10          0.7 s          3.0 s        
+15       0.6          8.9 %          4.1 %     94.4 %  6/10         0/10          0.8 s          3.0 s        
+15       0.7          8.6 %          4.1 %     94.5 %  6/10         0/10          1.0 s          3.0 s        
+15       0.8         17.8 %          4.1 %     89.3 %  7/10         0/10          0.7 s          3.0 s        
+20       0.3          1.1 %          4.1 %     98.4 %  2/10         0/10          0.1 s          3.0 s        
+20       0.4          1.5 %          4.1 %     98.3 %  2/10         0/10          0.2 s          3.0 s        
+20       0.5          4.9 %          4.1 %     96.5 %  3/10         0/10          0.8 s          3.0 s        
+20       0.6          5.1 %          4.1 %     96.4 %  4/10         0/10          1.0 s          3.0 s        
+20       0.7          5.1 %          4.1 %     96.4 %  4/10         0/10          1.3 s          3.0 s        
+20       0.8         14.1 %          4.1 %     91.4 %  5/10         0/10          1.2 s          3.0 s        
+
+Gespeichert: C:\Public\Studium\Bachelorarbeit\code\results\metrics\two_stage_track_grayscale_sweep.csv
+
+
+Run: two_stage_notrack_grayscale   |   Zeitfenster: 5 Bilder   |   Schwellenwert: 0.5   |   Entscheidungszeit erlaubt: 3.0 s
+
+Video                                            Kategorie   Fehler                 Katze übersehen  Entscheidung nach  Ergebnis           
+-------------------------------------------------------------------------------------------------------------------------------------------
+no_prey/01_orange_day.mp4                        ohne Beute  0/39 Bilder gesperrt   0/51              3.0 s             ok                 
+no_prey/02_black_day.mp4                         ohne Beute  28/39 Bilder gesperrt  1/53              6.6 s             ok                 
+no_prey/03_white_day.mp4                         ohne Beute  0/39 Bilder gesperrt   4/53              3.0 s             ok                 
+no_prey/04_tabby_overcast.mp4                    ohne Beute  0/39 Bilder gesperrt   1/53              3.0 s             ok                 
+no_prey/05_calico_dusk.mp4                       ohne Beute  0/39 Bilder gesperrt   1/53              3.0 s             ok                 
+no_prey/06_black_ir.mp4                          ohne Beute  31/39 Bilder gesperrt  2/53              7.0 s             ok                 
+no_prey/07_orange_ir.mp4                         ohne Beute  0/39 Bilder gesperrt   2/53              3.0 s             ok                 
+no_prey/08_grey_ir.mp4                           ohne Beute  0/39 Bilder gesperrt   0/53              3.0 s             ok                 
+no_prey/09_twocats_orange_black_day.mp4          ohne Beute  0/39 Bilder gesperrt   2/64              3.0 s             ok                 
+no_prey/10_twocats_tabby_white_ir.mp4            ohne Beute  0/39 Bilder gesperrt   0/64              3.0 s             ok                 
+with_prey/01_orange_mouse_day.mp4                mit Beute   8/80 Bilder offen      0/51              0.0 s             BEUTE DURCHGELASSEN
+with_prey/02_black_mouse_day.mp4                 mit Beute   9/80 Bilder offen      1/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/03_white_bird_day.mp4                  mit Beute   21/80 Bilder offen     1/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/04_tabby_rat_overcast.mp4              mit Beute   3/80 Bilder offen      3/53              0.5 s             BEUTE DURCHGELASSEN
+with_prey/05_calico_vole_dusk.mp4                mit Beute   3/80 Bilder offen      3/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/06_black_bird_ir.mp4                   mit Beute   7/80 Bilder offen      4/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/07_orange_mouse_ir.mp4                 mit Beute   26/80 Bilder offen     2/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/08_grey_rat_ir.mp4                     mit Beute   12/80 Bilder offen     0/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/09_twocats_orange-mouse_black_day.mp4  mit Beute   12/80 Bilder offen     2/64              0.9 s             BEUTE DURCHGELASSEN
+with_prey/10_twocats_tabby-bird_white_ir.mp4     mit Beute   15/80 Bilder offen     0/64              1.1 s             BEUTE DURCHGELASSEN
+
+Zusammenfassung
+  Sicherheitsfehler (offen trotz Beute):          14.5 %
+  Komfortfehler (gesperrt obwohl sauber):         15.1 %
+  Präzision / Trefferquote / F1 (sperren):        92.1 % /   85.5 % /   88.7 %
+  Übersehene Katzen:                               2.6 %
+  Beute durchgelassen:                          10 von 10 Videos
+  Saubere Katze ausgesperrt:                    0 von 10 Videos
+  Mittlere Entscheidungszeit mit / ohne Beute:   0.2 s /  3.8 s
+
+Details gespeichert: C:\Public\Studium\Bachelorarbeit\code\results\metrics\two_stage_notrack_grayscale_h5_t0.5.csv
+
+
+Parameterreihe für two_stage_notrack_grayscale  (alle Werte über alle Videos)
+
+Fenster  Schwelle  Sicherheitsf.  Komfortf.  F1        Beute durch  Ausgesperrt  Entsch. Beute  Entsch. sauber
+--------------------------------------------------------------------------------------------------------------
+1        0.3          7.0 %         19.2 %     91.9 %  10/10        0/10          0.1 s          3.7 s        
+1        0.4          7.4 %         19.5 %     91.7 %  10/10        0/10          0.1 s          3.7 s        
+1        0.5          6.2 %         19.2 %     92.3 %  10/10        0/10          0.2 s          3.7 s        
+1        0.6          7.2 %         19.2 %     91.8 %  10/10        0/10          0.2 s          3.7 s        
+1        0.7          9.0 %         19.5 %     90.8 %  10/10        0/10          0.2 s          3.7 s        
+1        0.8         10.0 %         20.3 %     90.1 %  10/10        0/10          0.2 s          3.8 s        
+3        0.3          7.4 %         16.2 %     92.4 %  9/10         0/10          0.1 s          3.7 s        
+3        0.4          9.4 %         16.4 %     91.3 %  10/10        0/10          0.2 s          3.7 s        
+3        0.5         12.5 %         16.2 %     89.6 %  10/10        0/10          0.2 s          3.7 s        
+3        0.6         12.8 %         17.4 %     89.1 %  10/10        0/10          0.3 s          3.8 s        
+3        0.7         16.5 %         17.4 %     87.0 %  10/10        0/10          0.6 s          3.8 s        
+3        0.8         15.1 %          7.2 %     90.1 %  10/10        0/10          0.6 s          3.4 s        
+5        0.3          7.5 %         16.7 %     92.2 %  9/10         0/10          0.1 s          3.8 s        
+5        0.4          9.8 %         16.4 %     91.0 %  10/10        0/10          0.2 s          3.7 s        
+5        0.5         14.5 %         15.1 %     88.7 %  10/10        0/10          0.2 s          3.8 s        
+5        0.6         20.0 %          0.0 %     88.9 %  10/10        0/10          0.6 s          3.0 s        
+5        0.7         20.2 %          0.0 %     88.7 %  10/10        0/10          0.7 s          3.0 s        
+5        0.8         19.1 %          0.0 %     89.4 %  10/10        0/10          1.1 s          3.0 s        
+8        0.3          7.1 %         15.1 %     92.8 %  9/10         0/10          0.1 s          3.8 s        
+8        0.4         11.2 %          8.2 %     92.1 %  9/10         0/10          0.2 s          3.4 s        
+8        0.5         17.6 %          8.5 %     88.3 %  9/10         0/10          0.7 s          3.4 s        
+8        0.6         19.0 %          0.0 %     89.5 %  10/10        0/10          0.7 s          3.0 s        
+8        0.7         19.8 %          0.0 %     89.0 %  10/10        0/10          0.8 s          3.0 s        
+8        0.8         24.5 %          0.0 %     86.0 %  10/10        0/10          1.0 s          3.0 s        
+10       0.3          8.1 %          7.9 %     93.9 %  8/10         0/10          0.1 s          3.4 s        
+10       0.4         10.8 %          8.5 %     92.3 %  9/10         0/10          0.2 s          3.4 s        
+10       0.5         17.5 %          0.0 %     90.4 %  9/10         0/10          0.7 s          3.0 s        
+10       0.6         18.1 %          0.0 %     90.0 %  9/10         0/10          0.8 s          3.0 s        
+10       0.7         19.1 %          0.0 %     89.4 %  10/10        0/10          0.8 s          3.0 s        
+10       0.8         27.9 %          0.0 %     83.8 %  10/10        0/10          0.4 s          3.0 s        
+15       0.3          7.0 %          9.5 %     94.1 %  7/10         0/10          0.2 s          3.5 s        
+15       0.4          9.2 %          0.0 %     95.2 %  7/10         0/10          0.2 s          3.0 s        
+15       0.5         19.4 %          0.0 %     89.3 %  8/10         0/10          0.2 s          3.0 s        
+15       0.6         21.8 %          0.0 %     87.8 %  9/10         0/10          0.3 s          3.0 s        
+15       0.7         21.9 %          0.0 %     87.7 %  10/10        0/10          0.5 s          3.0 s        
+15       0.8         26.9 %          0.0 %     84.5 %  10/10        0/10          0.8 s          3.0 s        
+20       0.3          3.5 %          0.0 %     98.2 %  5/10         0/10          0.2 s          3.0 s        
+20       0.4          9.1 %          0.0 %     95.2 %  8/10         0/10          0.4 s          3.0 s        
+20       0.5         16.5 %          0.0 %     91.0 %  8/10         0/10          0.9 s          3.0 s        
+20       0.6         20.2 %          0.0 %     88.7 %  8/10         0/10          0.6 s          3.0 s        
+20       0.7         19.9 %          0.0 %     89.0 %  9/10         0/10          1.2 s          3.0 s        
+20       0.8         25.0 %          0.0 %     85.7 %  10/10        0/10          1.3 s          3.0 s        
+
+Gespeichert: C:\Public\Studium\Bachelorarbeit\code\results\metrics\two_stage_notrack_grayscale_sweep.csv
+
+
+Run: one_stage_track_grayscale   |   Zeitfenster: 5 Bilder   |   Schwellenwert: 0.5   |   Entscheidungszeit erlaubt: 3.0 s
+
+Video                                            Kategorie   Fehler                 Katze übersehen  Entscheidung nach  Ergebnis           
+-------------------------------------------------------------------------------------------------------------------------------------------
+no_prey/01_orange_day.mp4                        ohne Beute  6/39 Bilder gesperrt   0/51              3.8 s             ok                 
+no_prey/02_black_day.mp4                         ohne Beute  2/39 Bilder gesperrt   7/53              3.1 s             ok                 
+no_prey/03_white_day.mp4                         ohne Beute  22/39 Bilder gesperrt  7/53              4.0 s             ok                 
+no_prey/04_tabby_overcast.mp4                    ohne Beute  26/39 Bilder gesperrt  3/53              3.8 s             ok                 
+no_prey/05_calico_dusk.mp4                       ohne Beute  30/39 Bilder gesperrt  2/53              3.6 s             ok                 
+no_prey/06_black_ir.mp4                          ohne Beute  0/39 Bilder gesperrt   5/53              3.0 s             ok                 
+no_prey/07_orange_ir.mp4                         ohne Beute  3/39 Bilder gesperrt   5/53              3.5 s             ok                 
+no_prey/08_grey_ir.mp4                           ohne Beute  0/39 Bilder gesperrt   0/53              3.0 s             ok                 
+no_prey/09_twocats_orange_black_day.mp4          ohne Beute  36/39 Bilder gesperrt  3/64              4.4 s             ok                 
+no_prey/10_twocats_tabby_white_ir.mp4            ohne Beute  0/39 Bilder gesperrt   1/64              3.0 s             ok                 
+with_prey/01_orange_mouse_day.mp4                mit Beute   0/80 Bilder offen      0/51              1.2 s             ok                 
+with_prey/02_black_mouse_day.mp4                 mit Beute   0/80 Bilder offen      7/53              0.0 s             ok                 
+with_prey/03_white_bird_day.mp4                  mit Beute   0/80 Bilder offen      7/53              0.0 s             ok                 
+with_prey/04_tabby_rat_overcast.mp4              mit Beute   0/80 Bilder offen      4/53              0.0 s             ok                 
+with_prey/05_calico_vole_dusk.mp4                mit Beute   3/80 Bilder offen      1/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/06_black_bird_ir.mp4                   mit Beute   0/80 Bilder offen      14/53             0.4 s             ok                 
+with_prey/07_orange_mouse_ir.mp4                 mit Beute   0/80 Bilder offen      5/53              0.0 s             ok                 
+with_prey/08_grey_rat_ir.mp4                     mit Beute   12/80 Bilder offen     0/53              1.5 s             BEUTE DURCHGELASSEN
+with_prey/09_twocats_orange-mouse_black_day.mp4  mit Beute   2/80 Bilder offen      0/64              0.0 s             BEUTE DURCHGELASSEN
+with_prey/10_twocats_tabby-bird_white_ir.mp4     mit Beute   23/80 Bilder offen     1/64              0.0 s             BEUTE DURCHGELASSEN
+
+Zusammenfassung
+  Sicherheitsfehler (offen trotz Beute):           5.0 %
+  Komfortfehler (gesperrt obwohl sauber):         32.1 %
+  Präzision / Trefferquote / F1 (sperren):        85.9 % /   95.0 % /   90.2 %
+  Übersehene Katzen:                               6.5 %
+  Beute durchgelassen:                          4 von 10 Videos
+  Saubere Katze ausgesperrt:                    0 von 10 Videos
+  Mittlere Entscheidungszeit mit / ohne Beute:   0.3 s /  3.5 s
+
+Details gespeichert: C:\Public\Studium\Bachelorarbeit\code\results\metrics\one_stage_track_grayscale_h5_t0.5.csv
+
+
+Parameterreihe für one_stage_track_grayscale  (alle Werte über alle Videos)
+
+Fenster  Schwelle  Sicherheitsf.  Komfortf.  F1        Beute durch  Ausgesperrt  Entsch. Beute  Entsch. sauber
+--------------------------------------------------------------------------------------------------------------
+1        0.3          4.4 %         74.1 %     82.5 %  9/10         0/10          0.0 s          3.7 s        
+1        0.4          4.9 %         60.3 %     84.7 %  9/10         0/10          0.0 s          3.7 s        
+1        0.5          6.8 %         62.1 %     83.4 %  10/10        0/10          0.0 s          3.7 s        
+1        0.6          7.2 %         53.6 %     84.8 %  9/10         0/10          0.5 s          3.6 s        
+1        0.7          9.2 %         28.5 %     88.7 %  8/10         1/10          0.8 s          3.2 s        
+1        0.8         11.0 %         15.1 %     90.6 %  9/10         0/10          1.0 s          3.0 s        
+3        0.3          3.2 %         62.3 %     85.2 %  4/10         0/10          0.0 s          3.7 s        
+3        0.4          6.6 %         43.6 %     87.0 %  4/10         0/10          0.0 s          3.8 s        
+3        0.5          6.9 %         39.0 %     87.8 %  6/10         0/10          0.3 s          3.8 s        
+3        0.6          6.1 %         30.5 %     89.9 %  5/10         0/10          0.7 s          3.3 s        
+3        0.7          7.9 %         14.6 %     92.5 %  7/10         0/10          1.1 s          3.0 s        
+3        0.8         11.4 %          6.4 %     92.4 %  6/10         0/10          1.3 s          3.0 s        
+5        0.3          3.4 %         42.8 %     88.9 %  4/10         0/10          0.0 s          3.9 s        
+5        0.4          5.0 %         39.2 %     88.7 %  4/10         0/10          0.3 s          3.8 s        
+5        0.5          5.0 %         32.1 %     90.2 %  4/10         0/10          0.3 s          3.5 s        
+5        0.6          6.4 %         23.3 %     91.3 %  3/10         0/10          0.7 s          3.3 s        
+5        0.7         11.8 %          7.2 %     92.0 %  5/10         0/10          1.5 s          3.0 s        
+5        0.8         11.8 %          1.3 %     93.4 %  5/10         0/10          1.6 s          3.0 s        
+8        0.3          5.1 %         33.1 %     89.9 %  4/10         0/10          0.1 s          3.9 s        
+8        0.4          4.9 %         32.1 %     90.3 %  4/10         0/10          0.3 s          3.5 s        
+8        0.5          4.6 %         30.8 %     90.7 %  4/10         0/10          0.4 s          3.5 s        
+8        0.6          6.1 %         22.6 %     91.6 %  3/10         0/10          0.9 s          3.3 s        
+8        0.7         10.2 %          6.4 %     93.1 %  3/10         0/10          1.7 s          3.0 s        
+8        0.8         10.6 %          1.3 %     94.1 %  4/10         0/10          2.0 s          3.0 s        
+10       0.3          5.0 %         33.6 %     89.9 %  4/10         0/10          0.2 s          3.9 s        
+10       0.4          5.0 %         31.0 %     90.4 %  4/10         0/10          0.3 s          3.5 s        
+10       0.5          8.9 %         30.3 %     88.5 %  4/10         0/10          0.2 s          3.5 s        
+10       0.6          6.1 %         22.3 %     91.7 %  3/10         0/10          0.9 s          3.3 s        
+10       0.7         10.2 %          1.3 %     94.3 %  3/10         0/10          1.8 s          3.0 s        
+10       0.8         11.2 %          1.3 %     93.7 %  5/10         0/10          2.4 s          3.0 s        
+15       0.3          5.0 %         31.5 %     90.3 %  4/10         0/10          0.2 s          3.5 s        
+15       0.4          9.1 %         30.0 %     88.4 %  4/10         0/10          0.2 s          3.5 s        
+15       0.5          9.1 %         24.9 %     89.5 %  4/10         0/10          0.3 s          3.5 s        
+15       0.6          5.2 %         17.2 %     93.3 %  2/10         0/10          1.2 s          3.3 s        
+15       0.7         10.6 %          1.3 %     94.1 %  5/10         0/10          2.1 s          3.0 s        
+15       0.8         11.5 %          1.3 %     93.6 %  6/10         0/10          2.7 s          3.0 s        
+20       0.3          8.0 %         30.5 %     88.9 %  2/10         0/10          0.0 s          3.5 s        
+20       0.4          9.1 %         24.9 %     89.5 %  3/10         0/10          0.2 s          3.5 s        
+20       0.5          9.4 %         24.9 %     89.4 %  3/10         0/10          0.3 s          3.5 s        
+20       0.6          8.9 %         17.2 %     91.4 %  4/10         0/10          1.8 s          3.3 s        
+20       0.7         11.5 %          1.3 %     93.6 %  5/10         0/10          2.3 s          3.0 s        
+20       0.8         13.1 %          1.3 %     92.7 %  7/10         0/10          3.1 s          3.0 s        
+
+Gespeichert: C:\Public\Studium\Bachelorarbeit\code\results\metrics\one_stage_track_grayscale_sweep.csv
+
+
+Run: one_stage_notrack_grayscale   |   Zeitfenster: 5 Bilder   |   Schwellenwert: 0.5   |   Entscheidungszeit erlaubt: 3.0 s
+
+Video                                            Kategorie   Fehler                 Katze übersehen  Entscheidung nach  Ergebnis           
+-------------------------------------------------------------------------------------------------------------------------------------------
+no_prey/01_orange_day.mp4                        ohne Beute  3/39 Bilder gesperrt   0/51              3.5 s             ok                 
+no_prey/02_black_day.mp4                         ohne Beute  2/39 Bilder gesperrt   6/53              3.0 s             ok                 
+no_prey/03_white_day.mp4                         ohne Beute  22/39 Bilder gesperrt  5/53              4.0 s             ok                 
+no_prey/04_tabby_overcast.mp4                    ohne Beute  28/39 Bilder gesperrt  1/53              3.8 s             ok                 
+no_prey/05_calico_dusk.mp4                       ohne Beute  27/39 Bilder gesperrt  0/53              3.0 s             ok                 
+no_prey/06_black_ir.mp4                          ohne Beute  14/39 Bilder gesperrt  5/53              4.9 s             ok                 
+no_prey/07_orange_ir.mp4                         ohne Beute  3/39 Bilder gesperrt   4/53              3.5 s             ok                 
+no_prey/08_grey_ir.mp4                           ohne Beute  28/39 Bilder gesperrt  0/53              3.9 s             ok                 
+no_prey/09_twocats_orange_black_day.mp4          ohne Beute  33/39 Bilder gesperrt  2/64              3.1 s             ok                 
+no_prey/10_twocats_tabby_white_ir.mp4            ohne Beute  14/39 Bilder gesperrt  0/64              3.0 s             ok                 
+with_prey/01_orange_mouse_day.mp4                mit Beute   0/80 Bilder offen      0/51              0.0 s             ok                 
+with_prey/02_black_mouse_day.mp4                 mit Beute   0/80 Bilder offen      6/53              0.0 s             ok                 
+with_prey/03_white_bird_day.mp4                  mit Beute   2/80 Bilder offen      4/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/04_tabby_rat_overcast.mp4              mit Beute   3/80 Bilder offen      1/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/05_calico_vole_dusk.mp4                mit Beute   9/80 Bilder offen      0/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/06_black_bird_ir.mp4                   mit Beute   8/80 Bilder offen      6/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/07_orange_mouse_ir.mp4                 mit Beute   2/80 Bilder offen      5/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/08_grey_rat_ir.mp4                     mit Beute   33/80 Bilder offen     0/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/09_twocats_orange-mouse_black_day.mp4  mit Beute   2/80 Bilder offen      0/64              0.0 s             BEUTE DURCHGELASSEN
+with_prey/10_twocats_tabby-bird_white_ir.mp4     mit Beute   37/80 Bilder offen     1/64              0.0 s             BEUTE DURCHGELASSEN
+
+Zusammenfassung
+  Sicherheitsfehler (offen trotz Beute):          12.0 %
+  Komfortfehler (gesperrt obwohl sauber):         44.6 %
+  Präzision / Trefferquote / F1 (sperren):        80.2 % /   88.0 % /   83.9 %
+  Übersehene Katzen:                               4.2 %
+  Beute durchgelassen:                          8 von 10 Videos
+  Saubere Katze ausgesperrt:                    0 von 10 Videos
+  Mittlere Entscheidungszeit mit / ohne Beute:   0.0 s /  3.6 s
+
+Details gespeichert: C:\Public\Studium\Bachelorarbeit\code\results\metrics\one_stage_notrack_grayscale_h5_t0.5.csv
+
+
+Parameterreihe für one_stage_notrack_grayscale  (alle Werte über alle Videos)
+
+Fenster  Schwelle  Sicherheitsf.  Komfortf.  F1        Beute durch  Ausgesperrt  Entsch. Beute  Entsch. sauber
+--------------------------------------------------------------------------------------------------------------
+1        0.3          2.6 %         80.8 %     82.3 %  9/10         0/10          0.0 s          3.5 s        
+1        0.4          2.1 %         79.0 %     82.8 %  9/10         0/10          0.0 s          3.5 s        
+1        0.5          4.0 %         80.0 %     81.7 %  10/10        0/10          0.0 s          3.5 s        
+1        0.6          5.8 %         76.4 %     81.4 %  10/10        0/10          0.0 s          3.5 s        
+1        0.7          5.5 %         74.6 %     81.9 %  9/10         0/10          0.2 s          3.7 s        
+1        0.8          5.5 %         63.3 %     83.9 %  9/10         0/10          0.2 s          3.7 s        
+3        0.3          2.0 %         78.5 %     83.0 %  7/10         0/10          0.0 s          3.5 s        
+3        0.4          3.6 %         60.0 %     85.4 %  8/10         0/10          0.0 s          3.6 s        
+3        0.5         10.1 %         54.6 %     83.0 %  8/10         0/10          0.0 s          3.6 s        
+3        0.6         11.0 %         47.4 %     83.9 %  8/10         0/10          0.0 s          3.6 s        
+3        0.7         10.6 %         36.4 %     86.3 %  8/10         0/10          0.3 s          3.3 s        
+3        0.8         16.0 %          9.0 %     89.2 %  9/10         0/10          0.6 s          3.2 s        
+5        0.3          4.5 %         74.9 %     82.3 %  5/10         0/10          0.0 s          3.5 s        
+5        0.4         12.1 %         52.6 %     82.3 %  7/10         0/10          0.0 s          3.6 s        
+5        0.5         12.0 %         44.6 %     83.9 %  8/10         0/10          0.0 s          3.6 s        
+5        0.6         10.2 %         28.2 %     88.2 %  8/10         0/10          0.0 s          3.6 s        
+5        0.7         13.9 %         21.5 %     87.6 %  8/10         0/10          0.5 s          3.2 s        
+5        0.8         14.9 %          5.9 %     90.6 %  8/10         0/10          1.1 s          3.3 s        
+8        0.3         10.9 %         51.0 %     83.3 %  4/10         0/10          0.0 s          3.6 s        
+8        0.4         13.4 %         44.6 %     83.1 %  6/10         0/10          0.0 s          3.6 s        
+8        0.5         12.9 %         35.4 %     85.3 %  6/10         0/10          0.0 s          3.6 s        
+8        0.6         13.8 %         12.8 %     89.6 %  8/10         0/10          0.0 s          3.3 s        
+8        0.7         19.1 %          5.4 %     88.1 %  8/10         0/10          0.8 s          3.2 s        
+8        0.8         19.4 %          3.3 %     88.5 %  9/10         0/10          1.1 s          3.1 s        
+10       0.3          9.5 %         45.4 %     85.1 %  4/10         0/10          0.0 s          3.6 s        
+10       0.4         12.0 %         38.5 %     85.1 %  5/10         0/10          0.0 s          3.6 s        
+10       0.5         12.8 %         22.8 %     88.0 %  6/10         0/10          0.0 s          3.3 s        
+10       0.6         14.6 %         12.3 %     89.2 %  7/10         0/10          0.2 s          3.3 s        
+10       0.7         19.1 %          5.4 %     88.1 %  8/10         0/10          0.9 s          3.2 s        
+10       0.8         21.6 %          3.3 %     87.1 %  8/10         0/10          1.5 s          3.1 s        
+15       0.3         10.0 %         42.3 %     85.5 %  4/10         0/10          0.0 s          3.6 s        
+15       0.4         11.5 %         23.1 %     88.6 %  4/10         0/10          0.0 s          3.3 s        
+15       0.5         11.6 %          6.2 %     92.4 %  5/10         0/10          0.2 s          3.3 s        
+15       0.6         14.5 %          5.6 %     90.8 %  5/10         0/10          0.5 s          3.3 s        
+15       0.7         15.5 %          5.4 %     90.3 %  8/10         0/10          1.3 s          3.2 s        
+15       0.8         27.5 %          3.3 %     83.3 %  10/10        0/10          1.4 s          3.1 s        
+20       0.3          9.9 %         34.9 %     87.0 %  3/10         0/10          0.0 s          3.6 s        
+20       0.4         11.5 %         12.3 %     91.0 %  4/10         0/10          0.0 s          3.3 s        
+20       0.5         13.9 %          6.2 %     91.1 %  4/10         0/10          0.3 s          3.3 s        
+20       0.6         18.2 %          5.6 %     88.6 %  5/10         0/10          0.6 s          3.3 s        
+20       0.7         20.1 %          5.4 %     87.5 %  8/10         0/10          1.5 s          3.2 s        
+20       0.8         24.5 %          3.3 %     85.3 %  9/10         0/10          1.5 s          3.1 s        
+
+Gespeichert: C:\Public\Studium\Bachelorarbeit\code\results\metrics\one_stage_notrack_grayscale_sweep.csv
+
+
+Run: two_stage_track_grayscale_rgbseg   |   Zeitfenster: 5 Bilder   |   Schwellenwert: 0.5   |   Entscheidungszeit erlaubt: 3.0 s
+
+Video                                            Kategorie   Fehler                Katze übersehen  Entscheidung nach  Ergebnis           
+------------------------------------------------------------------------------------------------------------------------------------------
+no_prey/01_orange_day.mp4                        ohne Beute  3/39 Bilder gesperrt  0/51              3.0 s             ok                 
+no_prey/02_black_day.mp4                         ohne Beute  0/39 Bilder gesperrt  3/53              3.0 s             ok                 
+no_prey/03_white_day.mp4                         ohne Beute  0/39 Bilder gesperrt  4/53              3.0 s             ok                 
+no_prey/04_tabby_overcast.mp4                    ohne Beute  0/39 Bilder gesperrt  2/53              3.0 s             ok                 
+no_prey/05_calico_dusk.mp4                       ohne Beute  0/39 Bilder gesperrt  4/53              3.0 s             ok                 
+no_prey/06_black_ir.mp4                          ohne Beute  0/39 Bilder gesperrt  2/53              3.0 s             ok                 
+no_prey/07_orange_ir.mp4                         ohne Beute  0/39 Bilder gesperrt  5/53              3.0 s             ok                 
+no_prey/08_grey_ir.mp4                           ohne Beute  0/39 Bilder gesperrt  0/53              3.0 s             ok                 
+no_prey/09_twocats_orange_black_day.mp4          ohne Beute  0/39 Bilder gesperrt  3/64              3.0 s             ok                 
+no_prey/10_twocats_tabby_white_ir.mp4            ohne Beute  0/39 Bilder gesperrt  0/64              3.0 s             ok                 
+with_prey/01_orange_mouse_day.mp4                mit Beute   4/80 Bilder offen     0/51              0.0 s             BEUTE DURCHGELASSEN
+with_prey/02_black_mouse_day.mp4                 mit Beute   11/80 Bilder offen    1/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/03_white_bird_day.mp4                  mit Beute   20/80 Bilder offen    2/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/04_tabby_rat_overcast.mp4              mit Beute   5/80 Bilder offen     5/53              0.5 s             BEUTE DURCHGELASSEN
+with_prey/05_calico_vole_dusk.mp4                mit Beute   2/80 Bilder offen     4/53              0.0 s             BEUTE DURCHGELASSEN
+with_prey/06_black_bird_ir.mp4                   mit Beute   0/80 Bilder offen     4/53              0.0 s             ok                 
+with_prey/07_orange_mouse_ir.mp4                 mit Beute   8/80 Bilder offen     4/53              0.2 s             BEUTE DURCHGELASSEN
+with_prey/08_grey_rat_ir.mp4                     mit Beute   6/80 Bilder offen     0/53              0.1 s             BEUTE DURCHGELASSEN
+with_prey/09_twocats_orange-mouse_black_day.mp4  mit Beute   13/80 Bilder offen    3/64              4.6 s             BEUTE DURCHGELASSEN
+with_prey/10_twocats_tabby-bird_white_ir.mp4     mit Beute   9/80 Bilder offen     1/64              1.4 s             BEUTE DURCHGELASSEN
+
+Zusammenfassung
+  Sicherheitsfehler (offen trotz Beute):           9.8 %
+  Komfortfehler (gesperrt obwohl sauber):          0.8 %
+  Präzision / Trefferquote / F1 (sperren):        99.6 % /   90.2 % /   94.7 %
+  Übersehene Katzen:                               4.3 %
+  Beute durchgelassen:                          9 von 10 Videos
+  Saubere Katze ausgesperrt:                    0 von 10 Videos
+  Mittlere Entscheidungszeit mit / ohne Beute:   0.7 s /  3.0 s
+
+Details gespeichert: C:\Public\Studium\Bachelorarbeit\code\results\metrics\two_stage_track_grayscale_rgbseg_h5_t0.5.csv
+
+
+Parameterreihe für two_stage_track_grayscale_rgbseg  (alle Werte über alle Videos)
+
+Fenster  Schwelle  Sicherheitsf.  Komfortf.  F1        Beute durch  Ausgesperrt  Entsch. Beute  Entsch. sauber
+--------------------------------------------------------------------------------------------------------------
+1        0.3         11.6 %          0.8 %     93.6 %  10/10        0/10          0.5 s          3.0 s        
+1        0.4         11.8 %          0.8 %     93.6 %  10/10        0/10          0.5 s          3.0 s        
+1        0.5          9.2 %          0.8 %     95.0 %  10/10        0/10          0.5 s          3.0 s        
+1        0.6          9.8 %          0.8 %     94.7 %  10/10        0/10          0.5 s          3.0 s        
+1        0.7         11.8 %          0.8 %     93.6 %  10/10        0/10          0.7 s          3.0 s        
+1        0.8         12.8 %          0.8 %     93.0 %  10/10        0/10          0.7 s          3.0 s        
+3        0.3         10.8 %          0.8 %     94.1 %  9/10         0/10          0.5 s          3.0 s        
+3        0.4          9.9 %          0.8 %     94.6 %  9/10         0/10          0.5 s          3.0 s        
+3        0.5         11.8 %          0.8 %     93.6 %  10/10        0/10          0.5 s          3.0 s        
+3        0.6         10.0 %          0.8 %     94.6 %  10/10        0/10          0.7 s          3.0 s        
+3        0.7         14.6 %          0.8 %     91.9 %  10/10        0/10          0.3 s          3.0 s        
+3        0.8         16.1 %          0.8 %     91.0 %  10/10        0/10          0.5 s          3.0 s        
+5        0.3          7.6 %          0.8 %     95.8 %  8/10         0/10          0.5 s          3.0 s        
+5        0.4          7.2 %          0.8 %     96.1 %  8/10         0/10          0.6 s          3.0 s        
+5        0.5          9.8 %          0.8 %     94.7 %  9/10         0/10          0.7 s          3.0 s        
+5        0.6          9.9 %          0.8 %     94.6 %  9/10         0/10          0.7 s          3.0 s        
+5        0.7         15.1 %          0.8 %     91.6 %  10/10        0/10          0.7 s          3.0 s        
+5        0.8         18.2 %          0.8 %     89.8 %  10/10        0/10          1.0 s          3.0 s        
+8        0.3          6.2 %          0.8 %     96.6 %  7/10         0/10          0.6 s          3.0 s        
+8        0.4          6.8 %          0.8 %     96.3 %  7/10         0/10          0.6 s          3.0 s        
+8        0.5          9.4 %          0.8 %     94.9 %  7/10         0/10          0.7 s          3.0 s        
+8        0.6         10.9 %          0.8 %     94.1 %  9/10         0/10          1.1 s          3.0 s        
+8        0.7         14.8 %          0.8 %     91.9 %  9/10         0/10          0.8 s          3.0 s        
+8        0.8         21.2 %          0.8 %     87.9 %  10/10        0/10          0.9 s          3.0 s        
+10       0.3          4.2 %          0.8 %     97.6 %  5/10         0/10          0.6 s          3.0 s        
+10       0.4          8.0 %          0.8 %     95.6 %  7/10         0/10          0.7 s          3.0 s        
+10       0.5          6.9 %          0.8 %     96.3 %  6/10         0/10          0.8 s          3.0 s        
+10       0.6         10.9 %          0.8 %     94.1 %  8/10         0/10          1.1 s          3.0 s        
+10       0.7         15.5 %          0.8 %     91.4 %  9/10         0/10          1.2 s          3.0 s        
+10       0.8         16.6 %          0.8 %     90.7 %  9/10         0/10          1.9 s          3.0 s        
+15       0.3          3.5 %          0.8 %     98.0 %  3/10         0/10          0.8 s          3.0 s        
+15       0.4          3.5 %          0.8 %     98.0 %  3/10         0/10          0.9 s          3.0 s        
+15       0.5          5.6 %          0.8 %     96.9 %  5/10         0/10          1.0 s          3.0 s        
+15       0.6         10.9 %          0.8 %     94.1 %  8/10         0/10          1.6 s          3.0 s        
+15       0.7         21.1 %          0.8 %     88.0 %  9/10         0/10          1.5 s          3.0 s        
+15       0.8         30.1 %          0.8 %     82.1 %  8/10         0/10          0.7 s          3.0 s        
+20       0.3          2.4 %          0.8 %     98.6 %  2/10         0/10          0.9 s          3.0 s        
+20       0.4          3.8 %          0.8 %     97.9 %  3/10         0/10          1.1 s          3.0 s        
+20       0.5          5.5 %          0.8 %     97.0 %  4/10         0/10          1.4 s          3.0 s        
+20       0.6         11.4 %          0.8 %     93.8 %  6/10         0/10          2.0 s          3.0 s        
+20       0.7         20.6 %          0.8 %     88.3 %  6/10         0/10          0.9 s          3.0 s        
+20       0.8         29.0 %          0.8 %     82.9 %  7/10         0/10          1.1 s          3.0 s        
+
+Gespeichert: C:\Public\Studium\Bachelorarbeit\code\results\metrics\two_stage_track_grayscale_rgbseg_sweep.csv
+
+===== Evaluation finished 13.10.2026 21:14:28,15 ===== 
