@@ -46,7 +46,7 @@ class CatFlapProcessor:
             color_mode_detector="grayscale",
             color_mode_classifier="grayscale"
         )
-        self.state_machine = StateMachine(history_length=5, threshold=0.5, max_missed_frames=30)
+        self.state_machine = StateMachine(history_length=20, threshold=0.3, max_missed_frames=30)
         
         self.save_uncertain_dir = save_uncertain_dir
         self.last_saved_frame = {}

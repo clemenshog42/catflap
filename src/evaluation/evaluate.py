@@ -25,7 +25,7 @@ Metrics (per video and summed over all videos)
   missed cats     : frames with a recognisable cat face (face_visible) in which no cat was detected
 
 Usage (from code/):
-  python src/evaluation/evaluate.py --run results/raw/two_stage_track_grayscale --history 5 --threshold 0.5
+  python src/evaluation/evaluate.py --run results/raw/two_stage_track_grayscale --history 20 --threshold 0.3
   python src/evaluation/evaluate.py --run results/raw/two_stage_track_grayscale --sweep
 """
 import argparse
@@ -203,8 +203,8 @@ def print_report(run, res, history, threshold, grace):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", required=True, help="folder with raw CSVs from run_inference.py")
-    ap.add_argument("--history", type=int, default=5)
-    ap.add_argument("--threshold", type=float, default=0.5)
+    ap.add_argument("--history", type=int, default=20)
+    ap.add_argument("--threshold", type=float, default=0.3)
     ap.add_argument("--grace", type=float, default=3.0, help="seconds allowed for the initial decision")
     ap.add_argument("--sweep", action="store_true", help="grid over history length and threshold")
     args = ap.parse_args()
