@@ -52,10 +52,12 @@ def load_gt(video):
         return json.load(f)
 
 
-def replay(df, history, threshold, max_missed_s=4.0, fps=8.0):
+def replay(df, history, threshold, max_missed_frames=30):
     """Replays the state machine.
+    Frames are counted as processed frames (as on the Pi), not as indices of the original 24 FPS video,
+    so max_missed_frames has the same meaning as in processor.py (30 frames = 3.75 s at 8 FPS).
     Returns the timeline [(time_s, door_open, cat_detected)] and the emitted decisions [(time_s, AccessState)]."""
-    sm = StateMachine(history_length=history, threshold=threshold, max_missed_frames=int(round(max_missed_s * fps)))
+    sm = StateMachine(history_length=history, threshold=threshold, max_missed_frames=max_missed_frames)
     door = {"open": False, "t": 0.0}
     decisions = []
 
@@ -65,7 +67,7 @@ def replay(df, history, threshold, max_missed_s=4.0, fps=8.0):
     sm.subscribe(cb)
 
     timeline = []
-    for (frame, t), rows in df.groupby(["frame", "time_s"], sort=True):
+    for frame, ((_, t), rows) in enumerate(df.groupby(["frame", "time_s"], sort=True)):
         door["t"] = float(t)
         detected = False
         for _, r in rows.iterrows():
