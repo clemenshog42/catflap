@@ -23,6 +23,8 @@ models/*
 !models/1stage_ablation.pt
 !models/prey_gray.pt
 !models/prey_rgb.pt
+!models/cat_face_gray.tflite
+!models/prey_gray.tflite
 
 # Rendered overlay videos
 results/videos/

@@ -40,8 +40,8 @@ class CatFlapProcessor:
         """
         self.use_tracking = use_tracking
         self.pipeline = CatFlapPipeline(
-            detector_path="models/cat_face.tflite",
-            classifier_path="models/prey_gray.pt",
+            detector_path="models/cat_face_gray.tflite",  # export of cat_face.pt (greyscale, 1 channel), see export_pi.bat
+            classifier_path="models/prey_gray.tflite",    # export of prey_gray.pt (greyscale, 1 channel)
             apply_clahe_detector=False,
             apply_clahe_classifier=False,
             color_mode_detector="grayscale",
