@@ -14,25 +14,31 @@ import zipfile
 from crop import crop_region, CROP_PAD
 
 
+def _export_metadata(model_path):
+    """Exported models (e.g. .tflite) carry Ultralytics' metadata.json (task, channels, ...) as an embedded zip.
+    Returns it as a dict, or {} for .pt files and files without metadata."""
+    try:
+        if model_path and zipfile.is_zipfile(model_path):
+            with zipfile.ZipFile(model_path) as z:
+                if "metadata.json" in z.namelist():
+                    return json.loads(z.read("metadata.json"))
+    except (OSError, ValueError):
+        pass
+    return {}
+
 def _task_from_metadata(model_path):
     """Ultralytics cannot guess the task of exported models (e.g. .tflite) from the file name and falls back
     to 'detect', which decodes a segmentation output wrongly. Exported files carry their task in the embedded
     metadata.json, so read it from there. Returns None for .pt files, where Ultralytics infers it itself."""
-    try:
-        if zipfile.is_zipfile(model_path):
-            with zipfile.ZipFile(model_path) as z:
-                if "metadata.json" in z.namelist():
-                    return json.loads(z.read("metadata.json")).get("task")
-    except (OSError, ValueError):
-        pass
-    return None
+    return _export_metadata(model_path).get("task")
 
-def _input_channels(yolo_model):
-    """Number of input channels of a loaded YOLO model (3 if unknown, e.g. for exported models)."""
+def _input_channels(yolo_model, model_path=None):
+    """Number of input channels of a YOLO model: from the model yaml (.pt) or from the export metadata (.tflite).
+    3 if unknown."""
     try:
         return int(yolo_model.model.yaml.get("channels", 3))
     except AttributeError:
-        return 3
+        return int(_export_metadata(model_path).get("channels", 3))
 
 
 class CatFlapPipeline:
@@ -77,7 +83,7 @@ class CatFlapPipeline:
                 final_frame = frame
         
         # Detectors trained with 'channels: 1' (e.g. cat_face.pt) expect a single-channel input
-        if _input_channels(self.detector) == 1 and final_frame.ndim == 3:
+        if _input_channels(self.detector, self.detector_path) == 1 and final_frame.ndim == 3:
             final_frame = cv2.cvtColor(final_frame, cv2.COLOR_BGR2GRAY)[..., None]
 
         try:
@@ -136,7 +142,7 @@ class CatFlapPipeline:
                 final_crop = square_crop
             
         # Models trained with 'channels: 1' (e.g. prey_gray.pt) expect a single-channel input
-        if _input_channels(self.classifier) == 1 and final_crop.ndim == 3:
+        if _input_channels(self.classifier, self.classifier_path) == 1 and final_crop.ndim == 3:
             final_crop = cv2.cvtColor(final_crop, cv2.COLOR_BGR2GRAY)[..., None]
             
         results = self.classifier(final_crop, verbose=False)
