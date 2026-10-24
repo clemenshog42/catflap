@@ -98,9 +98,12 @@ class CatFlapPipeline:
         face_h = y2 - y1
         
         if getattr(self, 'use_asymmetric_crop', True):
-            pad_w = int(face_w * 0.8)
-            pad_top = int(face_h * 0)
-            pad_bottom = int(face_h * 2.0)
+            # Extension of the face box relative to its size (sides, top, bottom).
+            # Default: values the segmentation crops were made with; can be adapted to a detector with a different box shape.
+            pw, pt, pb = getattr(self, 'crop_pad', (0.8, 0.0, 2.0))
+            pad_w = int(face_w * pw)
+            pad_top = int(face_h * pt)
+            pad_bottom = int(face_h * pb)
         else:
             pad_w = int(face_w * 0)
             pad_top = int(face_h * 0)

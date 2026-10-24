@@ -121,6 +121,8 @@ def main():
     ap.add_argument("--detector", default=os.path.join(CODE_DIR, "models", "cat_face.pt"))  # greyscale model (1 channel)
     ap.add_argument("--segmenter", default=os.path.join(CODE_DIR, "models", "prey_gray.pt"))
     ap.add_argument("--one-stage-model", default=os.path.join(CODE_DIR, "models", "1stage_ablation.pt"))
+    ap.add_argument("--crop-pad", dest="crop_pad", nargs=3, type=float, default=None, metavar=("SIDE", "TOP", "BOTTOM"),
+                    help="extension of the face box for the segmentation crop, relative to the box size (default 0.8 0 2.0)")
     ap.add_argument("--tag", default="", help="extra name for the output folder")
     ap.add_argument("--overwrite", action="store_true", help="recompute videos that already have a CSV")
     args = ap.parse_args()
@@ -132,6 +134,8 @@ def main():
     if args.config == "two_stage":
         pipeline = CatFlapPipeline(args.detector, args.segmenter, apply_clahe_detector=False, apply_clahe_classifier=False,
                                    color_mode_detector=args.color, color_mode_classifier=args.seg_color or args.color)
+        if args.crop_pad:
+            pipeline.crop_pad = tuple(args.crop_pad)
     else:
         from ultralytics import YOLO
         model = YOLO(args.one_stage_model)
