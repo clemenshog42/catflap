@@ -2,6 +2,7 @@ import cv2
 import os
 from models import CatFlapPipeline
 from state_machine import StateMachine, State
+from crop import crop_region, CROP_PAD
 
 def draw_info(frame, box, track_id, state, prey_conf, cat_conf):
     """Draws bounding box, ID, State, and Confidence on the frame."""
@@ -46,7 +47,7 @@ class CatFlapProcessor:
             color_mode_detector="grayscale",
             color_mode_classifier="grayscale"
         )
-        self.state_machine = StateMachine(history_length=20, threshold=0.3, max_missed_frames=30)
+        self.state_machine = StateMachine(history_length=30, threshold=0.3, max_missed_frames=30)
         
         self.save_uncertain_dir = save_uncertain_dir
         self.last_saved_frame = {}
@@ -91,19 +92,22 @@ class CatFlapProcessor:
                 prey_confidence, crop_img = self.pipeline.run_prey_detector(frame, box)
                 if crop_img is not None:
                     self.latest_crop = crop_img
-                prey_results.append((box, cat_conf, prey_confidence, track_id))
+                # Crops reaching beyond the image border miss part of the prey area -> not added to the history
+                _, crop_inside = crop_region(box, frame.shape[1], frame.shape[0], getattr(self.pipeline, 'crop_pad', CROP_PAD))
+                prey_results.append((box, cat_conf, prey_confidence, track_id, crop_inside))
                 
             # 4. Update State Machine
             if self.use_tracking:
                 # One update per tracked cat -> separate confidence history per cat
-                for box, cat_conf, prey_confidence, track_id in prey_results:
-                    self.state_machine.update(track_id, prey_confidence, frame_idx)
+                for box, cat_conf, prey_confidence, track_id, crop_inside in prey_results:
+                    self.state_machine.update(track_id, prey_confidence, frame_idx, crop_inside)
             elif prey_results:
-                # One update for the whole frame (highest prey confidence of all cats)
-                frame_max_prey_conf = max(p[2] for p in prey_results)
-                self.state_machine.update(1, frame_max_prey_conf, frame_idx)
+                # One update for the whole frame (highest prey confidence of all cats with a complete crop)
+                complete = [p[2] for p in prey_results if p[4]]
+                frame_max_prey_conf = max(complete) if complete else 0.0
+                self.state_machine.update(1, frame_max_prey_conf, frame_idx, bool(complete))
             
-            for box, cat_conf, prey_confidence, track_id in prey_results:
+            for box, cat_conf, prey_confidence, track_id, crop_inside in prey_results:
                 current_state = self.state_machine.get_state(track_id)
                 history_len = len(self.state_machine.tracks[track_id].confidence_history) if track_id in self.state_machine.tracks else 0
                 print(f"[Frame {frame_idx}] Cat {track_id} | Prey Conf: {prey_confidence:.2f} | State: {current_state.value} | History: {history_len}/{self.state_machine.history_length}")
