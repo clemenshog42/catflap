@@ -75,6 +75,10 @@ class CatFlapPipeline:
             else:
                 final_frame = frame
         
+        # Detectors trained with 'channels: 1' (e.g. cat_face.pt) expect a single-channel input
+        if _input_channels(self.detector) == 1 and final_frame.ndim == 3:
+            final_frame = cv2.cvtColor(final_frame, cv2.COLOR_BGR2GRAY)[..., None]
+
         try:
             if track:
                 results = self.detector.track(final_frame, conf=0.1, persist=True, tracker="bytetrack.yaml", verbose=False)
