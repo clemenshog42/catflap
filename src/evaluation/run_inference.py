@@ -118,7 +118,7 @@ def main():
     ap.add_argument("--color", choices=["grayscale", "rgb"], default="grayscale")
     ap.add_argument("--seg-color", dest="seg_color", choices=["grayscale", "rgb"], default=None,
                     help="colour mode of the segmentation model only (default: same as --color); the face detector keeps --color")
-    ap.add_argument("--detector", default=os.path.join(CODE_DIR, "models", "cat_face.tflite"))
+    ap.add_argument("--detector", default=os.path.join(CODE_DIR, "models", "cat_face.pt"))  # greyscale model (1 channel)
     ap.add_argument("--segmenter", default=os.path.join(CODE_DIR, "models", "prey_gray.pt"))
     ap.add_argument("--one-stage-model", default=os.path.join(CODE_DIR, "models", "1stage_ablation.pt"))
     ap.add_argument("--tag", default="", help="extra name for the output folder")
