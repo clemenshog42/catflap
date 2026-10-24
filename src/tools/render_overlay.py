@@ -10,7 +10,10 @@ Drawn in:
   - the flap state of the final system and, for comparison, of the configuration without the crop rule
   - the annotated prey state and a marker for every frame that counts as a safety or comfort error
 
+--clean (e.g. for the presentation): only the final system, no comparison, no annotation (no ground truth needed).
+
 Usage: python3 src/tools/render_overlay.py [--run two_stage_track_grayscale] [--videos 01 06] [--overwrite]
+       python3 src/tools/render_overlay.py --run two_stage_track_grayscale_demo --video-dir videos/demo --clean
 """
 import argparse
 import glob
@@ -84,11 +87,10 @@ def segmentation_input(frame, region, size):
     return cv2.resize(g, (size, size))
 
 
-def render(video_path, csv_path, out_path, final, compare):
+def render(video_path, csv_path, out_path, final, compare, clean_mode=False):
     df = pd.read_csv(csv_path)
     video = df["video"].iloc[0]
-    gt = ev.load_gt(video)
-    cats = gt["cats"]
+    cats = [] if clean_mode else ev.load_gt(video)["cats"]
     first_seen = min((iv[0] for c in cats for iv in c.get("face_visible", c["visible"])), default=0.0)
 
     cap = cv2.VideoCapture(video_path)
@@ -146,6 +148,13 @@ def render(video_path, csv_path, out_path, final, compare):
                 return "  KOMFORTFEHLER"
             return ""
 
+        if clean_mode:
+            text(f, f"Klappe: {'OFFEN' if open_m else 'GESPERRT'}", (30, 56), 1.0,
+                 bg=(60, 160, 60) if open_m else (50, 50, 200))
+            text(f, f"t = {t:4.1f} s", (W - 170, 52), 0.8, bg=(40, 40, 40))
+            vw.write(f)
+            idx += 1
+            continue
         gt_txt = "Annotation: Beute" if need_lock else ("Annotation: keine Beute" if visible else "Annotation: keine Katze")
         y = 50
         for label, op in ((f"System ({final[0]}/{final[1]:g}, Randregel)", open_m),
@@ -170,6 +179,8 @@ def main():
     ap.add_argument("--final", nargs=2, type=float, default=[30, 0.3], metavar=("H", "T"))
     ap.add_argument("--compare", nargs=2, type=float, default=[20, 0.3], metavar=("H", "T"))
     ap.add_argument("--overwrite", action="store_true")
+    ap.add_argument("--video-dir", default=os.path.join(CODE_DIR, "videos", "veo"))
+    ap.add_argument("--clean", action="store_true", help="only the final system, without comparison and annotation")
     a = ap.parse_args()
     out_dir = os.path.join(CODE_DIR, "results", "videos", a.run)
     os.makedirs(out_dir, exist_ok=True)
@@ -181,8 +192,8 @@ def main():
         if os.path.exists(out_path) and not a.overwrite:
             continue
         video = pd.read_csv(csv_path, nrows=1)["video"].iloc[0]
-        render(os.path.join(CODE_DIR, "videos", "veo", video), csv_path, out_path,
-               (int(a.final[0]), a.final[1]), (int(a.compare[0]), a.compare[1]))
+        render(os.path.join(a.video_dir, video), csv_path, out_path,
+               (int(a.final[0]), a.final[1]), (int(a.compare[0]), a.compare[1]), a.clean)
         print("geschrieben:", out_path, flush=True)
 
 
