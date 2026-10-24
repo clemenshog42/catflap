@@ -47,6 +47,8 @@ class CatFlapProcessor:
             color_mode_detector="grayscale",
             color_mode_classifier="grayscale"
         )
+        # Relaxed ByteTrack: fewer ID switches at 8 FPS (see config/bytetrack_relaxed.yaml)
+        self.pipeline.tracker = "config/bytetrack_relaxed.yaml"
         self.state_machine = StateMachine(history_length=30, threshold=0.3, max_missed_frames=30)
         
         self.save_uncertain_dir = save_uncertain_dir
