@@ -1,5 +1,6 @@
 """Summary of all ablation runs: single-frame decision (window 1, threshold 0.5) and the final state machine
-configuration (window 20, threshold 0.3), split into day and infrared videos.
+configuration (window 30, threshold 0.3, frames whose segmentation crop leaves the image are not counted),
+split into day and infrared videos. The crop rule only applies to two-stage runs with the state machine.
 
   python src/evaluation/ablation_summary.py
 """
@@ -10,7 +11,7 @@ from evaluate import evaluate_run, summarize, CODE_DIR
 
 RUNS = ["two_stage_track_grayscale", "two_stage_notrack_grayscale", "one_stage_track_grayscale",
         "one_stage_notrack_grayscale", "two_stage_track_grayscale_rgbseg"]
-CONFIGS = [(1, 0.5), (20, 0.3)]
+CONFIGS = [(1, 0.5, False), (30, 0.3, True)]  # (window, threshold, crop rule)
 IR_VIDEOS = {"06", "07", "08", "10"}  # infrared night vision, all others are day light
 
 
@@ -24,8 +25,8 @@ def main():
         run_dir = os.path.join(CODE_DIR, "results", "raw", run)
         if not os.path.isdir(run_dir):
             continue
-        for h, t in CONFIGS:
-            res = evaluate_run(run_dir, h, t, 3.0)
+        for h, t, crop_rule in CONFIGS:
+            res = evaluate_run(run_dir, h, t, 3.0, crop_rule=crop_rule and run.startswith("two_stage"))
             res["group"] = res.video.map(group_of)
             rows.append(dict(summarize(res), run=run, h=h, t=t, group="alle"))
             for g in ["Tag", "IR"]:

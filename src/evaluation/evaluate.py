@@ -24,8 +24,12 @@ Metrics (per video and summed over all videos)
   decision time   : seconds from the cat face appearing to the first DENIED (prey videos) or GRANTED (clean videos)
   missed cats     : frames with a recognisable cat face (face_visible) in which no cat was detected
 
+Crop rule (two-stage runs): frames in which the extended face box for the segmentation reaches beyond the
+image border are not added to the history (see crop.py and StateMachine.update). --no-crop-rule switches it off
+(one-stage runs have no segmentation crop).
+
 Usage (from code/):
-  python src/evaluation/evaluate.py --run results/raw/two_stage_track_grayscale --history 20 --threshold 0.3
+  python src/evaluation/evaluate.py --run results/raw/two_stage_track_grayscale --history 30 --threshold 0.3
   python src/evaluation/evaluate.py --run results/raw/two_stage_track_grayscale --sweep
 """
 import argparse
@@ -34,13 +38,26 @@ import json
 import os
 import sys
 
+import cv2
 import pandas as pd
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from state_machine import StateMachine, AccessState  # noqa: E402
+from crop import crop_region  # noqa: E402
 
 CODE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-ANN_DIR = os.path.join(CODE_DIR, "videos", "veo", "annotations")
+VIDEO_DIR = os.path.join(CODE_DIR, "videos", "veo")
+ANN_DIR = os.path.join(VIDEO_DIR, "annotations")
+_SIZES = {}
+
+
+def video_size(video):
+    """(width, height) of a test video, needed to check whether the segmentation crop stays inside the image."""
+    if video not in _SIZES:
+        cap = cv2.VideoCapture(os.path.join(VIDEO_DIR, video))
+        _SIZES[video] = (cap.get(cv2.CAP_PROP_FRAME_WIDTH), cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        cap.release()
+    return _SIZES[video]
 
 
 def in_any(t, intervals):
@@ -52,10 +69,11 @@ def load_gt(video):
         return json.load(f)
 
 
-def replay(df, history, threshold, max_missed_frames=30):
+def replay(df, history, threshold, max_missed_frames=30, crop_rule=True):
     """Replays the state machine.
     Frames are counted as processed frames (as on the Pi), not as indices of the original 24 FPS video,
     so max_missed_frames has the same meaning as in processor.py (30 frames = 3.75 s at 8 FPS).
+    crop_rule: frames whose segmentation crop leaves the image are not added to the history.
     Returns the timeline [(time_s, door_open, cat_detected)] and the emitted decisions [(time_s, AccessState)]."""
     sm = StateMachine(history_length=history, threshold=threshold, max_missed_frames=max_missed_frames)
     door = {"open": False, "t": 0.0}
@@ -65,6 +83,7 @@ def replay(df, history, threshold, max_missed_frames=30):
         door["open"] = (state == AccessState.GRANTED)
         decisions.append((door["t"], state))
     sm.subscribe(cb)
+    img_w, img_h = video_size(df["video"].iloc[0]) if crop_rule else (0, 0)
 
     timeline = []
     for frame, ((_, t), rows) in enumerate(df.groupby(["frame", "time_s"], sort=True)):
@@ -73,7 +92,8 @@ def replay(df, history, threshold, max_missed_frames=30):
         for _, r in rows.iterrows():
             if pd.notna(r["track_id"]) and r["track_id"] != "":
                 detected = True
-                sm.update(int(r["track_id"]), float(r["prey_conf"]), int(frame))
+                valid = crop_region((r["x1"], r["y1"], r["x2"], r["y2"]), img_w, img_h)[1] if crop_rule else True
+                sm.update(int(r["track_id"]), float(r["prey_conf"]), int(frame), valid)
         sm.process_global_state(int(frame), current_time=float(t))
         if len(sm.tracks) == 0:
             door["open"] = False  # flap auto-locks when no cat is present
@@ -123,12 +143,12 @@ def score(video, timeline, decisions, gt, grace):
     return m
 
 
-def evaluate_run(run_dir, history, threshold, grace):
+def evaluate_run(run_dir, history, threshold, grace, crop_rule=True):
     rows = []
     for csv_path in sorted(glob.glob(os.path.join(run_dir, "*.csv"))):
         df = pd.read_csv(csv_path, dtype={"track_id": "string"})
         video = df["video"].iloc[0]
-        timeline, decisions = replay(df, history, threshold)
+        timeline, decisions = replay(df, history, threshold, crop_rule=crop_rule)
         m = score(video, timeline, decisions, load_gt(video), grace)
         m.update(history=history, threshold=threshold)
         rows.append(m)
@@ -205,10 +225,12 @@ def print_report(run, res, history, threshold, grace):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", required=True, help="folder with raw CSVs from run_inference.py")
-    ap.add_argument("--history", type=int, default=20)
+    ap.add_argument("--history", type=int, default=30)
     ap.add_argument("--threshold", type=float, default=0.3)
     ap.add_argument("--grace", type=float, default=3.0, help="seconds allowed for the initial decision")
     ap.add_argument("--sweep", action="store_true", help="grid over history length and threshold")
+    ap.add_argument("--no-crop-rule", dest="crop_rule", action="store_false",
+                    help="add every frame to the history, also if the segmentation crop leaves the image (one-stage runs)")
     args = ap.parse_args()
 
     out_dir = os.path.join(CODE_DIR, "results", "metrics")
@@ -217,9 +239,9 @@ def main():
 
     if args.sweep:
         summary = []
-        for h in [1, 3, 5, 8, 10, 15, 20]:
-            for th in [0.3, 0.4, 0.5, 0.6, 0.7, 0.8]:
-                s = summarize(evaluate_run(args.run, h, th, args.grace))
+        for h in [1, 3, 5, 8, 10, 15, 20, 25, 30]:
+            for th in [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]:
+                s = summarize(evaluate_run(args.run, h, th, args.grace, args.crop_rule))
                 summary.append(dict(history=h, threshold=th, **s))
         out = pd.DataFrame(summary)
         path = os.path.join(out_dir, f"{run}_sweep.csv")
@@ -231,7 +253,7 @@ def main():
                       sec(r.decision_time_prey_s), sec(r.decision_time_clean_s)] for r in out.itertuples()])
         print(f"\nGespeichert: {path}\n")
     else:
-        res = evaluate_run(args.run, args.history, args.threshold, args.grace)
+        res = evaluate_run(args.run, args.history, args.threshold, args.grace, args.crop_rule)
         path = os.path.join(out_dir, f"{run}_h{args.history}_t{args.threshold}.csv")
         res.to_csv(path, index=False)
         print_report(run, res, args.history, args.threshold, args.grace)

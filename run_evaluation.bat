@@ -7,7 +7,7 @@ set LOG=results\run_log.txt
 echo ===== Evaluation started %date% %time% ===== > %LOG%
 
 REM Ablations: (1) state machine = parameter sweep of evaluate.py, (2) detection+segmentation vs. detection = two_stage vs. one_stage,
-REM Two-stage runs use the greyscale face detector models\cat_face.pt and are recomputed (--overwrite);
+REM Two-stage runs use the greyscale face detector models\cat_face.pt and the crop extension from src\crop.py and are recomputed (--overwrite);
 REM one-stage runs do not use the face detector and are kept.
 REM (3) grayscale vs. RGB = segmentation model prey_gray.pt vs. prey_rgb.pt (only if models\prey_rgb.pt exists)
 echo [1/5] two_stage with tracking
@@ -29,10 +29,14 @@ if exist models\prey_rgb.pt (
 
 echo Evaluating...
 setlocal enabledelayedexpansion
+REM One-stage runs have no segmentation crop, so the crop rule of the state machine does not apply (--no-crop-rule)
 for %%R in (!RUNS!) do (
-  python src\evaluation\evaluate.py --run results\raw\%%R >> %LOG% 2>&1
-  python src\evaluation\evaluate.py --run results\raw\%%R --sweep >> %LOG% 2>&1
+  set EXTRA=
+  echo %%R | findstr /b "one_stage" >nul && set EXTRA=--no-crop-rule
+  python src\evaluation\evaluate.py --run results\raw\%%R !EXTRA! >> %LOG% 2>&1
+  python src\evaluation\evaluate.py --run results\raw\%%R --sweep !EXTRA! >> %LOG% 2>&1
 )
+python src\evaluation\ablation_summary.py >> %LOG% 2>&1
 echo ===== Evaluation finished %date% %time% ===== >> %LOG%
 echo Done. Results in %LOG%
 pause
