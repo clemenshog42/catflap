@@ -1,7 +1,7 @@
 """Compare face detector variants on the Veo test videos (8 FPS, like the evaluation).
 
-For every variant it counts, per video, the processed frames in which at least one cat face
-is detected with a confidence of at least --conf, and prints the share of frames with a detection.
+For every variant it counts, per video, the detected cat faces with a confidence of at least --conf
+(at most as many as cats in the video, i.e. 2 in the "twocats" videos) and prints the share of expected faces found.
 
   venv\\Scripts\\python src\\tools\\compare_face_detectors.py
 """
@@ -35,7 +35,7 @@ def main():
     args = ap.parse_args()
     videos = sorted(glob.glob(os.path.join(CODE_DIR, "videos", "veo", "*", "*.mp4")))
     models = {}
-    print(f"Anteil Einzelbilder mit erkanntem Gesicht (Konfidenz >= {args.conf})\n")
+    print(f"Anteil gefundener Katzengesichter (Konfidenz >= {args.conf}; bei zwei Katzen werden beide erwartet)\n")
     header = f"{'Video':45s}" + "".join(f"{v[0][:22]:>24s}" for v in VARIANTS)
     print(header)
     totals = [[0, 0] for _ in VARIANTS]
@@ -47,6 +47,7 @@ def main():
                 task = "detect"
                 models[model_path] = YOLO(os.path.join(CODE_DIR, model_path), task=task)
             model = models[model_path]
+            cats = 2 if "twocats" in name else 1  # expected faces per frame
             cap = cv2.VideoCapture(path)
             i = hits = n = 0
             while True:
@@ -55,8 +56,8 @@ def main():
                     break
                 if i % args.step == 0:
                     r = model.predict(prepare(frame, mode), conf=args.conf, verbose=False)[0]
-                    hits += int(len(r.boxes) > 0)
-                    n += 1
+                    hits += min(len(r.boxes), cats)
+                    n += cats
                 i += 1
             totals[k][0] += hits
             totals[k][1] += n
