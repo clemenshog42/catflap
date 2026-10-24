@@ -23,8 +23,13 @@ class TrackState:
         self.current_state = State.GATHERING_HISTORY
         self.last_seen = 0 # Frame counter or timestamp
         
-    def update(self, prey_confidence, frame_idx):
-        """Update track history with a new confidence score."""
+    def update(self, prey_confidence, frame_idx, valid=True):
+        """Update track history with a new confidence score.
+        valid=False: the segmentation crop reached beyond the image border, so part of the area where prey
+        would be is missing. The cat counts as seen, but the value is not added to the history and the state is kept."""
+        if not valid:
+            self.last_seen = frame_idx
+            return self.current_state
         self.confidence_history.append(prey_confidence)
         self.last_seen = frame_idx
         
@@ -58,8 +63,8 @@ class StateMachine:
         """Subscribe to global access state changes (AccessState.GRANTED / DENIED)."""
         self.global_callbacks.append(callback)
         
-    def update(self, track_id, prey_confidence, frame_idx):
-        """Update a specific track and return its state."""
+    def update(self, track_id, prey_confidence, frame_idx, valid=True):
+        """Update a specific track and return its state (valid: see TrackState.update)."""
         if track_id not in self.tracks:
             track = TrackState(
                 track_id, 
@@ -68,7 +73,7 @@ class StateMachine:
             )
             self.tracks[track_id] = track
             
-        return self.tracks[track_id].update(prey_confidence, frame_idx)
+        return self.tracks[track_id].update(prey_confidence, frame_idx, valid)
         
     def process_global_state(self, current_frame, current_time=None):
         """

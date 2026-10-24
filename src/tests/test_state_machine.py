@@ -37,6 +37,17 @@ class TestStateMachine(unittest.TestCase):
         self.sm.process_global_state(current_frame=15, current_time=15.0)
         self.assertNotIn(1, self.sm.tracks)
 
+    def test_invalid_frames_are_not_added(self):
+        # Frames whose segmentation crop leaves the image do not change the history or the state
+        for i in range(1, 6):
+            self.sm.update(1, 0.9, i)
+        self.assertEqual(self.sm.get_state(1), State.CAT_WITH_PREY)
+        for i in range(6, 20):
+            state = self.sm.update(1, 0.0, i, valid=False)
+        self.assertEqual(state, State.CAT_WITH_PREY)
+        self.assertEqual(list(self.sm.tracks[1].confidence_history), [0.9] * 5)
+        self.assertEqual(self.sm.tracks[1].last_seen, 19)
+
     def _decisions(self):
         decisions = []
         self.sm.subscribe(decisions.append)
