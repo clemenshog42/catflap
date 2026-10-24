@@ -182,7 +182,7 @@ def main():
     ap.add_argument("--video-dir", default=os.path.join(CODE_DIR, "videos", "veo"))
     ap.add_argument("--clean", action="store_true", help="only the final system, without comparison and annotation")
     a = ap.parse_args()
-    out_dir = os.path.join(CODE_DIR, "results", "videos", a.run)
+    out_dir = os.path.join(CODE_DIR, "results", "videos", a.run + ("_clean" if a.clean else ""))
     os.makedirs(out_dir, exist_ok=True)
     for csv_path in sorted(glob.glob(os.path.join(CODE_DIR, "results", "raw", a.run, "*.csv"))):
         name = os.path.basename(csv_path)[:-4]
