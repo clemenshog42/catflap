@@ -91,16 +91,23 @@ class StateMachine:
         # Only true if there's at least one cat; otherwise False
         all_cats_clean = len(self.tracks) > 0 
         
+        decided_clean = 0  # tracks with a full history that are clean
         for track in self.tracks.values():
             if track.current_state == State.CAT_WITH_PREY:
                 has_prey = True
                 all_cats_clean = False
-            if len(track.confidence_history) < self.history_length and track.last_seen >= current_frame:
+            elif len(track.confidence_history) < self.history_length:
                 # We need FULL history to be collected to confirm a cat is actually clean.
                 # Only tracks that are visible in the current frame count here: short-lived tracks left over
                 # from tracker ID switches would otherwise block the release until they are removed.
                 # Tracks with prey keep the flap locked until they are removed (see above).
-                all_cats_clean = False
+                if track.last_seen >= current_frame:
+                    all_cats_clean = False
+            else:
+                decided_clean += 1
+        if decided_clean == 0:
+            # Never release without at least one cat that has proven to be clean
+            all_cats_clean = False
                 
         access_state = None
         if has_prey:

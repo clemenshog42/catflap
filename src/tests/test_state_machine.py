@@ -64,5 +64,13 @@ class TestStateMachine(unittest.TestCase):
             self.sm.process_global_state(i, current_time=float(i))
         self.assertEqual(decisions, [AccessState.DENIED])
 
+    def test_no_release_without_clean_cat(self):
+        # An incomplete track that is not visible in this frame must not lead to a release on its own
+        decisions = self._decisions()
+        self.sm.update(track_id=1, prey_confidence=0.0, frame_idx=1)
+        self.sm.process_global_state(1, current_time=1.0)
+        self.sm.process_global_state(2, current_time=2.0)
+        self.assertEqual(decisions, [])
+
 if __name__ == '__main__':
     unittest.main()
