@@ -122,7 +122,7 @@ def main():
     ap.add_argument("--segmenter", default=os.path.join(CODE_DIR, "models", "prey_gray.pt"))
     ap.add_argument("--one-stage-model", default=os.path.join(CODE_DIR, "models", "1stage_ablation.pt"))
     ap.add_argument("--crop-pad", dest="crop_pad", nargs=3, type=float, default=None, metavar=("SIDE", "TOP", "BOTTOM"),
-                    help="extension of the face box for the segmentation crop, relative to the box size (default 0.8 0 2.0)")
+                    help="extension of the face box for the segmentation crop, relative to the box size (default: crop.CROP_PAD)")
     ap.add_argument("--tag", default="", help="extra name for the output folder")
     ap.add_argument("--overwrite", action="store_true", help="recompute videos that already have a CSV")
     args = ap.parse_args()

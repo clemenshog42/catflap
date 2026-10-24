@@ -11,6 +11,7 @@ except ImportError:
 from ultralytics import YOLO
 import json
 import zipfile
+from crop import crop_region, CROP_PAD
 
 
 def _task_from_metadata(model_path):
@@ -93,31 +94,12 @@ class CatFlapPipeline:
         if self.classifier is None:
             return 0.0, None
             
-        x1, y1, x2, y2 = map(int, box)
-        face_w = x2 - x1
-        face_h = y2 - y1
-        
-        if getattr(self, 'use_asymmetric_crop', True):
-            # Extension of the face box relative to its size (sides, top, bottom).
-            # Default: values the segmentation crops were made with; can be adapted to a detector with a different box shape.
-            pw, pt, pb = getattr(self, 'crop_pad', (0.8, 0.0, 2.0))
-            pad_w = int(face_w * pw)
-            pad_top = int(face_h * pt)
-            pad_bottom = int(face_h * pb)
-        else:
-            pad_w = int(face_w * 0)
-            pad_top = int(face_h * 0)
-            pad_bottom = int(face_h * 0)
-            
-        x1 -= pad_w
-        y1 -= pad_top
-        x2 += pad_w
-        y2 += pad_bottom
-        
         h, w = frame.shape[:2]
-        x1, y1 = max(0, x1), max(0, y1)
-        x2, y2 = min(w, x2), min(h, y2)
-        y1 = min(y2 - 1, y1)
+        if getattr(self, 'use_asymmetric_crop', True):
+            # Extension of the face box relative to its size (see crop.py); can be overridden via self.crop_pad
+            (x1, y1, x2, y2), _ = crop_region(box, w, h, getattr(self, 'crop_pad', CROP_PAD))
+        else:
+            (x1, y1, x2, y2), _ = crop_region(box, w, h, (0.0, 0.0, 0.0))
         
         crop = frame[y1:y2, x1:x2]
         
