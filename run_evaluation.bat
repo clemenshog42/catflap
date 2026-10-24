@@ -31,8 +31,9 @@ echo Evaluating...
 setlocal enabledelayedexpansion
 REM One-stage runs have no segmentation crop, so the crop rule of the state machine does not apply (--no-crop-rule)
 for %%R in (!RUNS!) do (
+  set NAME=%%R
   set EXTRA=
-  echo %%R | findstr /b "one_stage" >nul && set EXTRA=--no-crop-rule
+  if "!NAME:~0,9!"=="one_stage" set EXTRA=--no-crop-rule
   python src\evaluation\evaluate.py --run results\raw\%%R !EXTRA! >> %LOG% 2>&1
   python src\evaluation\evaluate.py --run results\raw\%%R --sweep !EXTRA! >> %LOG% 2>&1
 )

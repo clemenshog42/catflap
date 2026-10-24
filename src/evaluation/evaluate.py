@@ -241,7 +241,8 @@ def main():
         summary = []
         for h in [1, 3, 5, 8, 10, 15, 20, 25, 30]:
             for th in [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]:
-                s = summarize(evaluate_run(args.run, h, th, args.grace, args.crop_rule))
+                # a window of one frame is the system without state machine: no frame is held back there
+                s = summarize(evaluate_run(args.run, h, th, args.grace, args.crop_rule and h > 1))
                 summary.append(dict(history=h, threshold=th, **s))
         out = pd.DataFrame(summary)
         path = os.path.join(out_dir, f"{run}_sweep.csv")
