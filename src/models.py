@@ -88,7 +88,7 @@ class CatFlapPipeline:
 
         try:
             if track:
-                results = self.detector.track(final_frame, conf=0.1, persist=True, tracker="bytetrack.yaml", verbose=False)
+                results = self.detector.track(final_frame, conf=0.1, persist=True, tracker=getattr(self, 'tracker', "bytetrack.yaml"), verbose=False)
             else:
                 results = self.detector.predict(final_frame, conf=0.1, verbose=False)
             return results[0] 

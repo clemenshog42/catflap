@@ -1,0 +1,9 @@
+# ByteTrack, relaxed for the cat flap (8 frames per second, faces move far between frames).
+# Defaults of Ultralytics' bytetrack.yaml in brackets.
+tracker_type: bytetrack
+track_high_thresh: 0.2  # (0.25) detections above this are matched first
+track_low_thresh: 0.1   # (0.1) weaker detections are still used to keep existing tracks alive
+new_track_thresh: 0.4   # (0.25) a new ID is only started for a confident detection -> fewer short-lived extra tracks
+track_buffer: 60        # (30) frames a lost track is kept (7.5 s at 8 FPS) so a cat gets its old ID back
+match_thresh: 0.9       # (0.8) more lenient matching, faces move a lot between frames at 8 FPS
+fuse_score: True

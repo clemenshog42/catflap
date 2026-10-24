@@ -83,7 +83,7 @@ def run_one_stage(model, path, args, writer, name):
     for idx, t, frame in iter_frames(path, args.fps):
         inp = to_input(frame, args.color)
         if args.tracking:
-            res = model.track(inp, conf=0.1, persist=True, tracker="bytetrack.yaml", verbose=False)[0]
+            res = model.track(inp, conf=0.1, persist=True, tracker=args.tracker, verbose=False)[0]
         else:
             res = model.predict(inp, conf=0.1, verbose=False)[0]
         if res.boxes is None or len(res.boxes) == 0:
@@ -123,6 +123,7 @@ def main():
     ap.add_argument("--one-stage-model", default=os.path.join(CODE_DIR, "models", "1stage_ablation.pt"))
     ap.add_argument("--crop-pad", dest="crop_pad", nargs=3, type=float, default=None, metavar=("SIDE", "TOP", "BOTTOM"),
                     help="extension of the face box for the segmentation crop, relative to the box size (default: crop.CROP_PAD)")
+    ap.add_argument("--tracker", default="bytetrack.yaml", help="tracker config, e.g. config/bytetrack_relaxed.yaml")
     ap.add_argument("--tag", default="", help="extra name for the output folder")
     ap.add_argument("--overwrite", action="store_true", help="recompute videos that already have a CSV")
     args = ap.parse_args()
@@ -134,6 +135,7 @@ def main():
     if args.config == "two_stage":
         pipeline = CatFlapPipeline(args.detector, args.segmenter, apply_clahe_detector=False, apply_clahe_classifier=False,
                                    color_mode_detector=args.color, color_mode_classifier=args.seg_color or args.color)
+        pipeline.tracker = args.tracker
         if args.crop_pad:
             pipeline.crop_pad = tuple(args.crop_pad)
     else:
