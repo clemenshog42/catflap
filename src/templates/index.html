@@ -68,6 +68,21 @@
   .tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); white-space: nowrap; }
   .tag.prey { color: var(--danger); } .tag.clean { color: var(--ok); }
   .empty { color: var(--muted); font-size: 14px; }
+  .health { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .big { font-size: 34px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .big.ok { color: var(--ok); } .big.warm { color: var(--warn); } .big.hot { color: var(--danger); }
+  .hreason { font-size: 13px; color: var(--muted); }
+  .legend { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .sw { display: inline-block; width: 12px; height: 3px; border-radius: 2px; margin-left: 6px; }
+  .sw.t { background: var(--danger); } .sw.c { background: var(--accent); }
+  #chart { width: 100%; height: 140px; display: block; background: var(--surface-2); border-radius: 10px; }
+  .chart-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin: 4px 2px 12px; }
+  .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  @media (max-width: 600px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .tile { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+  .tile .k { display: block; font-size: 12px; color: var(--muted); }
+  .tile .v { display: block; font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .hnote { margin-top: 10px; font-size: 12px; color: var(--muted); }
   footer { text-align: center; padding: 0 16px 24px; font-size: 13px; }
   footer a { color: var(--muted); }
 </style>
@@ -78,6 +93,7 @@
   <div class="pills">
     <span class="pill" id="pill-flap"><span class="dot"></span><span>Flap …</span></span>
     <span class="pill" id="pill-det"><span class="dot"></span><span>Detection …</span></span>
+    <span class="pill" id="pill-pi"><span class="dot"></span><span>Pi …</span></span>
   </div>
 </header>
 
@@ -86,6 +102,29 @@
     <section class="card video">
       <img src="/video_feed" alt="Live camera view">
       <div class="video-bar"><span>Live camera</span><span id="params"></span></div>
+    </section>
+    <section class="card">
+      <h2>Raspberry Pi health</h2>
+      <div class="health">
+        <div>
+          <div class="big" id="h-temp">– °C</div>
+          <div class="hreason" id="h-reason">Loading …</div>
+        </div>
+        <div class="legend"><span class="sw t"></span>Temperature <span class="sw c"></span>CPU total</div>
+      </div>
+      <svg id="chart" viewBox="0 0 600 140" preserveAspectRatio="none" role="img" aria-label="Temperature and CPU over the last 30 minutes"></svg>
+      <div class="chart-axis"><span>30 min ago</span><span>now</span></div>
+      <div class="tiles">
+        <div class="tile"><span class="k">CPU total</span><span class="v" id="h-cpu">–</span></div>
+        <div class="tile"><span class="k">Catflap process</span><span class="v" id="h-proc">–</span></div>
+        <div class="tile"><span class="k">CPU clock</span><span class="v" id="h-clock">–</span></div>
+        <div class="tile"><span class="k">Fan</span><span class="v" id="h-fan">–</span></div>
+        <div class="tile"><span class="k">Detection</span><span class="v" id="h-fps">–</span></div>
+        <div class="tile"><span class="k">Memory</span><span class="v" id="h-mem">–</span></div>
+        <div class="tile"><span class="k">Disk free</span><span class="v" id="h-disk">–</span></div>
+        <div class="tile"><span class="k">Uptime</span><span class="v" id="h-up">–</span></div>
+      </div>
+      <div class="hnote" id="h-boot"></div>
     </section>
     <section class="card">
       <h2>Recordings</h2>
@@ -168,6 +207,55 @@ async function refreshClips() {
   } catch (e) {}
 }
 
+const fmt = (v, unit = '', digits = 0) => v === null || v === undefined ? '–' : `${Number(v).toFixed(digits)}${unit}`;
+
+function drawChart(h, warn, hot) {
+  const W = 600, H = 140, now = Date.now() / 1000, span = 30 * 60;
+  const x = t => Math.max(0, W - (now - t) / span * W);
+  const yT = v => H - (Math.min(Math.max(v, 30), 90) - 30) / 60 * H;   // 30..90 °C
+  const yC = v => H - Math.min(Math.max(v, 0), 100) / 100 * H;          // 0..100 %
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const line = (pts, f) => pts.filter(p => p[1] !== null).map((p, i) => `${i ? 'L' : 'M'}${x(p[0]).toFixed(1)},${f(p[1]).toFixed(1)}`).join('');
+  const temp = h.map(p => [p[0], p[1]]), cpu = h.map(p => [p[0], p[2]]);
+  const guide = (v, color, label) => `<line x1="0" x2="${W}" y1="${yT(v)}" y2="${yT(v)}" stroke="${color}" stroke-dasharray="4 4" opacity=".6"/>
+     <text x="6" y="${yT(v) - 4}" font-size="11" fill="${color}">${label}</text>`;
+  $('chart').innerHTML =
+    guide(hot, css('--danger'), `${hot} °C throttling`) + guide(warn, css('--warn'), `${warn} °C warm`) +
+    `<path d="${line(cpu, yC)}" fill="none" stroke="${css('--accent')}" stroke-width="1.5" opacity=".8" vector-effect="non-scaling-stroke"/>
+     <path d="${line(temp, yT)}" fill="none" stroke="${css('--danger')}" stroke-width="2.2" vector-effect="non-scaling-stroke"/>`;
+}
+
+function uptime(s) {
+  if (s === null || s === undefined) return '–';
+  const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
+  return d ? `${d} d ${h} h` : h ? `${h} h ${m} min` : `${m} min`;
+}
+
+async function refreshSystem() {
+  try {
+    const s = await (await fetch('/api/system')).json();
+    const level = s.health || 'ok';
+    pill($('pill-pi'), {ok: 'ok', warm: 'warn', hot: 'danger'}[level], `Pi ${fmt(s.temperature_c, ' °C', 1)}`);
+    $('h-temp').textContent = fmt(s.temperature_c, ' °C', 1);
+    $('h-temp').className = 'big ' + level;
+    $('h-reason').textContent = {ok: 'OK: ', warm: 'Warm: ', hot: 'Too hot: '}[level] + s.health_reason;
+    $('h-cpu').textContent = fmt(s.cpu_total_pct, ' %') + (s.load_1m !== null && s.load_1m !== undefined ? ` · load ${s.load_1m}` : '');
+    $('h-proc').textContent = fmt(s.cpu_process_pct, ' %', 1) + (s.process_mb ? ` · ${s.process_mb} MB` : '');
+    $('h-clock').textContent = s.cpu_mhz ? `${s.cpu_mhz} / ${s.cpu_max_mhz} MHz` : '–';
+    $('h-fan').textContent = s.fan_pct === null || s.fan_pct === undefined ? '–'
+      : `${s.fan_pct} %` + (s.fan_rpm !== null ? (s.fan_rpm === 0 && s.fan_pct > 0 ? ' · 0 rpm?' : ` · ${s.fan_rpm} rpm`) : '');
+    $('h-fps').textContent = s.detection_fps ? `${s.detection_fps} FPS` : 'idle';
+    $('h-mem').textContent = fmt(s.memory_pct, ' %');
+    $('h-disk').textContent = s.disk_free_gb === null || s.disk_free_gb === undefined ? '–' : `${s.disk_free_gb} GB`;
+    $('h-up').textContent = uptime(s.uptime_s);
+    const boot = s.throttled_since_boot || [];
+    $('h-boot').textContent = boot.length
+      ? `Since the last reboot the Pi has hit: ${boot.join(', ')}. This flag stays set until the next reboot.`
+      : 'No throttling or under-voltage since the last reboot.';
+    drawChart(s.history || [], s.temp_warn || 70, s.temp_hot || 80);
+  } catch (e) {}
+}
+
 async function post(url, body) {
   await fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: body ? JSON.stringify(body) : undefined});
   refresh();
@@ -177,8 +265,9 @@ document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () =
 $('btn-unlock').addEventListener('click', () => post('/api/unlock'));
 $('btn-lock').addEventListener('click', () => post('/api/lock'));
 
-refresh(); refreshClips();
+refresh(); refreshClips(); refreshSystem();
 setInterval(refresh, 1500);
+setInterval(refreshSystem, 5000);
 setInterval(refreshClips, 10000);
 </script>
 </body>

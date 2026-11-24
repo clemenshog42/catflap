@@ -12,6 +12,7 @@ from processor import CatFlapProcessor
 from motion import MotionDetector, MotionGate
 from catflap import SimulationCatflap, ServoCatflap
 from recorder import ClipRecorder, DropboxUploader, human_size
+from system_stats import SystemMonitor
 from state_machine import State, AccessState
 
 app = Flask(__name__)
@@ -40,6 +41,7 @@ override_mode = "auto"
 events = deque(maxlen=15)  # recent events for the web page
 
 recorder = None  # ClipRecorder, see recorder.py
+system_monitor = None  # SystemMonitor, see system_stats.py
 
 def log_event(text):
     print(f"[Event] {text}")
@@ -286,6 +288,19 @@ def override():
         apply_override(mode)
     return jsonify({"override": override_mode, "is_locked_in": flap.is_locked_in})
 
+@app.route('/api/system', methods=['GET'])
+def system_status():
+    """
+    Health of the Raspberry Pi (temperature, throttling, CPU, fan, memory, disk) with a 30 min history
+    ---
+    responses:
+      200:
+        description: "health is ok, warm (>= 70 °C) or hot (>= 80 °C or the Pi is throttling)"
+    """
+    data = system_monitor.snapshot() if system_monitor is not None else {}
+    data["detection_fps"] = round(processor.fps, 1) if processor is not None and current_mode == MotionGate.ACTIVE else 0.0
+    return jsonify(data)
+
 @app.route('/api/recordings', methods=['GET'])
 def list_recordings():
     """
@@ -408,6 +423,7 @@ if __name__ == "__main__":
                         help="File with DROPBOX_APP_KEY / DROPBOX_APP_SECRET / DROPBOX_REFRESH_TOKEN; upload is off without it")
     args = parser.parse_args()
 
+    system_monitor = SystemMonitor(disk_path=code_dir)
     if args.record:
         uploader = DropboxUploader(args.dropbox_env)
         recorder = ClipRecorder(os.path.abspath(args.record_dir), max_bytes=int(args.record_max_gb * 1024 ** 3),
