@@ -4,7 +4,9 @@
 
 numpy
 opencv-python-headless
-ultralytics
+# Pinned: newer versions (e.g. 8.4.131) pass single-channel TFLite input in the wrong layout
+# ("Dimension mismatch. Got 1 but expected 640"); models were exported and tested with 8.4.78.
+ultralytics==8.4.78
 flask
 ai-edge-litert
 gpiozero
