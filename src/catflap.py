@@ -12,6 +12,9 @@ try:
 except ImportError:
     Picamera2 = None
 
+SENSOR_SIZE = (1296, 972)  # full field of view of the OV5647 (2x2 binned)
+
+
 class Catflap:
     """
     Base interface representing the physical Cat Flap hardware.
@@ -33,9 +36,26 @@ class Catflap:
                 raise RuntimeError("Error: Picamera2 is not installed and no alternative video_source was provided.")
             print("[Catflap Sensor] Initializing physical Picamera2...")
             self.picam2 = Picamera2()
-            config = self.picam2.create_preview_configuration(main={"size": (640, 480)})
-            self.picam2.configure(config)
+            # Read out the full sensor area (2x2 binned 1296x972 mode on the OV5647) and let the ISP scale it
+            # down to 640x480. Without the sensor setting, libcamera may pick a smaller mode that covers
+            # less of the sensor (= looks zoomed in).
+            try:
+                config = self.picam2.create_preview_configuration(main={"size": (640, 480)}, sensor={"output_size": SENSOR_SIZE})
+                self.picam2.configure(config)
+            except Exception as e:
+                print(f"[Catflap Sensor] Sensor mode {SENSOR_SIZE} not available ({e}), using default mode")
+                config = self.picam2.create_preview_configuration(main={"size": (640, 480)})
+                self.picam2.configure(config)
             self.picam2.start()
+            try:
+                # Use the widest possible crop of the selected mode (no digital zoom)
+                max_crop = self.picam2.camera_controls["ScalerCrop"][1]
+                self.picam2.set_controls({"ScalerCrop": max_crop})
+                metadata = self.picam2.capture_metadata()
+                print(f"[Catflap Sensor] Sensor {self.picam2.camera_properties.get('PixelArraySize')}, "
+                      f"mode {config.get('sensor')}, ScalerCrop {metadata.get('ScalerCrop')} (max {max_crop})")
+            except Exception as e:
+                print(f"[Catflap Sensor] Could not set/read ScalerCrop: {e}")
         else:
             print(f"[Catflap Sensor] Opening video source: {self.video_source}")
             self.cap = cv2.VideoCapture(self.video_source)

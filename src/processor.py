@@ -55,7 +55,8 @@ class CatFlapProcessor:
         self.save_uncertain_dir = save_uncertain_dir
         self.last_saved_frame = {}
         self.latest_crop = None
-        
+        self.last_num_detections = 0
+
         # FPS Tracking
         import time
         self.fps = 0.0
@@ -76,7 +77,9 @@ class CatFlapProcessor:
         
         # 1 & 2. Run Object Detection and Tracking
         results = self.pipeline.run_detector(frame, track=self.use_tracking)
-        
+        # Number of cat faces in this frame (also unconfirmed tracks), used by the motion gate's idle probe
+        self.last_num_detections = len(results.boxes) if results and results.boxes else 0
+
         if results and results.boxes:
             boxes = results.boxes.xyxy.cpu().numpy()
             confidences = results.boxes.conf.cpu().numpy()
