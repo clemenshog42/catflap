@@ -32,11 +32,12 @@ def draw_info(frame, box, track_id, state, prey_conf, cat_conf):
     cv2.putText(frame, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 1)
 
 class CatFlapProcessor:
-    def __init__(self, save_uncertain_dir=None, use_tracking=True):
+    def __init__(self, save_uncertain_dir=None, use_tracking=True, history_length=30, threshold=0.3):
         """Initializes the Cat Flap models, state machine, and configuration.
 
         use_tracking: True  -> ByteTrack assigns an ID per cat, each cat gets its own confidence history.
                       False -> all cats share one global history (Global Track ID 1), e.g. for very low FPS.
+        history_length / threshold: state machine decision parameters (defaults = evaluated system 30 / 0.3).
         """
         self.use_tracking = use_tracking
         self.pipeline = CatFlapPipeline(
@@ -49,7 +50,7 @@ class CatFlapProcessor:
         )
         # Relaxed ByteTrack: fewer ID switches at 8 FPS (see config/bytetrack_relaxed.yaml)
         self.pipeline.tracker = "config/bytetrack_relaxed.yaml"
-        self.state_machine = StateMachine(history_length=30, threshold=0.3, max_missed_frames=30)
+        self.state_machine = StateMachine(history_length=history_length, threshold=threshold, max_missed_frames=30)
         
         self.save_uncertain_dir = save_uncertain_dir
         self.last_saved_frame = {}
@@ -125,7 +126,7 @@ class CatFlapProcessor:
                 draw_info(frame, box, track_id, current_state, prey_confidence, cat_conf)
         else:
             # If we want to debug silent frames (Optional, can be spammy)
-            if frame_idx % 10 == 0:
+            if frame_idx % 50 == 0:
                 print(f"[Frame {frame_idx}] No cat detected in this frame.")
                 
         # Clean up stale tracks and evaluate global flap state

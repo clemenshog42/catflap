@@ -9,6 +9,7 @@ Prey detection for a cat flap: YOLO26 cat face detection, ByteTrack tracking, pr
 |---|---|
 | `src/` | Pipeline: `models.py` (detector + segmentation), `processor.py`, `state_machine.py`, hardware (`catflap.py`) |
 | `src/main.py`, `src/pi_main.py`, `src/pi_server.py` | Local test, Raspberry Pi test, Raspberry Pi server (`--no-tracking` disables ByteTrack) |
+| `src/motion.py` | Motion gate for `pi_server.py`: detection only runs after motion (`--no-motion-gate`, `--motion-threshold`, `--idle-after`); decision parameters via `--history` (default 10) and `--prey-threshold` (default 0.3) |
 | `src/evaluation/` | Evaluation: `run_inference.py` (raw per-frame logs at 8 FPS) and `evaluate.py` (offline state machine replay + metrics) |
 | `src/face_detection/`, `src/prey_detection/` | Dataset building and training |
 | `src/tools/` | Utilities (Gemini image generation, grayscale conversion, model checks) |

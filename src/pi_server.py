@@ -6,6 +6,7 @@ from flask import Flask, Response, render_template_string, jsonify
 from flasgger import Swagger
 
 from processor import CatFlapProcessor
+from motion import MotionDetector, MotionGate
 from catflap import SimulationCatflap, ServoCatflap
 from state_machine import State, AccessState
 
@@ -15,6 +16,7 @@ swagger = Swagger(app)
 # Global variables for the background pipeline
 pipeline_thread = None
 current_frame_mjpeg = None
+current_mode = "idle"
 frame_lock = threading.Lock()
 
 # Global hardware
@@ -50,29 +52,57 @@ def on_access_state_changed(access_state):
             auto_lock_timer.cancel()
             auto_lock_timer = None
 
-def camera_loop(save_uncertain_dir, use_tracking=True):
-    """Background thread that continuously processes frames from the Catflap."""
-    global current_frame_mjpeg
-    
-    processor = CatFlapProcessor(save_uncertain_dir=save_uncertain_dir, use_tracking=use_tracking)
+IDLE_INTERVAL = 0.2  # seconds between motion checks while idle (~5 Hz)
+
+def camera_loop(save_uncertain_dir, use_tracking=True, history_length=10, prey_threshold=0.3,
+                motion_gate=True, motion_threshold=0.005, idle_after=5.0):
+    """Background thread that continuously processes frames from the Catflap.
+
+    With motion_gate, the detection pipeline only runs while something moves (or a cat is still tracked);
+    otherwise only the cheap MotionDetector looks at ~5 frames per second.
+    """
+    global current_frame_mjpeg, current_mode
+
+    processor = CatFlapProcessor(save_uncertain_dir=save_uncertain_dir, use_tracking=use_tracking,
+                                 history_length=history_length, threshold=prey_threshold)
     # Subscribe to state changes to trigger the flap hardware
     processor.state_machine.subscribe(on_access_state_changed)
-    
-    frame_idx = 0
+
+    detector = MotionDetector(min_area=motion_threshold)
+    gate = MotionGate(idle_after=idle_after)
+    current_mode = MotionGate.ACTIVE if not motion_gate else gate.mode
+    print(f"[Config] history={history_length} prey_threshold={prey_threshold} "
+          f"motion_gate={'on' if motion_gate else 'off'} motion_threshold={motion_threshold} idle_after={idle_after}s")
+
+    frame_idx = 0  # counts processed frames only, so max_missed_frames keeps its meaning
     try:
         # Loop continuously over frames from the smart flap hardware
         for frame in flap.capture_continuous():
-            frame_idx += 1
-            
-            # Process the frame
-            processor.process_frame(frame, frame_idx)
-            
+            loop_start = time.time()
+
+            if motion_gate:
+                motion = detector.has_motion(frame)
+                mode, changed = gate.step(motion, bool(processor.state_machine.tracks), loop_start)
+                if changed:
+                    print(f"[Motion] {mode.upper()} (changed pixels {detector.last_ratio:.1%})")
+                current_mode = mode
+
+            if current_mode == MotionGate.ACTIVE:
+                frame_idx += 1
+                processor.process_frame(frame, frame_idx)
+            else:
+                cv2.putText(frame, "IDLE (motion watch)", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (200, 200, 200), 2)
+
             # Encode frame to JPEG
             ret, buffer = cv2.imencode('.jpg', frame)
             if ret:
                 with frame_lock:
                     current_frame_mjpeg = buffer.tobytes()
-                    
+
+            if current_mode == MotionGate.IDLE:
+                # Keep the CPU (and the Pi) cool while nothing happens
+                time.sleep(max(0.0, IDLE_INTERVAL - (time.time() - loop_start)))
+
     finally:
         flap.close()
 
@@ -89,10 +119,15 @@ def get_status():
         schema:
           type: object
           properties:
-            is_locked:
+            is_locked_in:
               type: boolean
+            is_locked_out:
+              type: boolean
+            mode:
+              type: string
+              description: "idle (only motion watch) or active (detection running)"
     """
-    return jsonify({"is_locked_in": flap.is_locked_in, "is_locked_out": flap.is_locked_out})
+    return jsonify({"is_locked_in": flap.is_locked_in, "is_locked_out": flap.is_locked_out, "mode": current_mode})
 
 @app.route('/api/lock', methods=['POST'])
 def lock_flap():
@@ -175,6 +210,11 @@ if __name__ == "__main__":
     parser.add_argument("--simulate-servo", action="store_true", help="Run without initializing the physical servo motor")
     parser.add_argument("--flip", action="store_true", help="Flip the camera feed 180 degrees")
     parser.add_argument("--no-tracking", dest="no_tracking", action="store_true", help="Disable ByteTrack; all cats share one global history")
+    parser.add_argument("--history", type=int, default=10, help="Frames per cat before a decision (state machine history length)")
+    parser.add_argument("--prey-threshold", type=float, default=0.3, help="Mean prey confidence over the history from which a cat counts as carrying prey")
+    parser.add_argument("--no-motion-gate", dest="motion_gate", action="store_false", help="Run detection on every frame instead of only after motion")
+    parser.add_argument("--motion-threshold", type=float, default=0.005, help="Share of changed pixels (0..1) that counts as motion")
+    parser.add_argument("--idle-after", type=float, default=5.0, help="Seconds without motion (and without tracked cats) before detection pauses")
     args = parser.parse_args()
     
     # Initialize the central Catflap hardware
@@ -190,7 +230,8 @@ if __name__ == "__main__":
     # Start the camera processing loop in a background thread
     pipeline_thread = threading.Thread(
         target=camera_loop, 
-        args=(args.save_uncertain if args.save_uncertain else None, not args.no_tracking),
+        args=(args.save_uncertain if args.save_uncertain else None, not args.no_tracking,
+              args.history, args.prey_threshold, args.motion_gate, args.motion_threshold, args.idle_after),
         daemon=True # Daemon thread dies when the main Flask app dies
     )
     pipeline_thread.start()
