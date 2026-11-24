@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catflap Monitor</title>
+<style>
+  :root {
+    --bg: #0f1115; --surface: #171a21; --surface-2: #1f232c; --border: #2a2f3a;
+    --text: #e8eaf0; --muted: #9aa1b2;
+    --accent: #6c8cff; --ok: #3fb97f; --warn: #f0a640; --danger: #ef5d5d;
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f4f5f8; --surface: #ffffff; --surface-2: #f0f2f6; --border: #dde1e8;
+      --text: #1a1d24; --muted: #5d6474;
+      --accent: #3d5ce0; --ok: #1f8a57; --warn: #b8730f; --danger: #c83a3a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+           padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  header h1 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: .2px; }
+  .pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+          font-size: 13px; font-weight: 600; background: var(--surface-2); border: 1px solid var(--border); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .ok .dot { background: var(--ok); } .danger .dot { background: var(--danger); }
+  .warn .dot { background: var(--warn); } .accent .dot { background: var(--accent); }
+  main { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr); gap: 16px;
+         padding: 16px 20px 32px; max-width: 1400px; margin: 0 auto; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 12px 16px 24px; } }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .card h2 { margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 650; }
+  .stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .video { padding: 0; overflow: hidden; }
+  .video img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: #000; }
+  .video-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px;
+               font-size: 13px; color: var(--muted); border-top: 1px solid var(--border); }
+  .modes { display: grid; gap: 8px; }
+  .mode { text-align: left; width: 100%; padding: 12px 14px; border-radius: 10px; cursor: pointer;
+          background: var(--surface-2); color: var(--text); border: 1.5px solid var(--border); font: inherit; }
+  .mode strong { display: block; font-size: 15px; }
+  .mode span { font-size: 13px; color: var(--muted); }
+  .mode:hover { border-color: var(--accent); }
+  .mode.active { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .mode[data-mode=open].active { border-color: var(--warn); box-shadow: inset 0 0 0 1px var(--warn); }
+  .mode[data-mode=locked].active { border-color: var(--danger); box-shadow: inset 0 0 0 1px var(--danger); }
+  .note { margin-top: 10px; padding: 10px 12px; border-radius: 10px; font-size: 13px;
+          background: color-mix(in srgb, var(--warn) 14%, transparent); border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent); }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .row:last-child { border-bottom: 0; }
+  .row .k { color: var(--muted); }
+  .row .v { font-weight: 600; text-align: right; }
+  .actions { display: flex; gap: 8px; margin-top: 12px; }
+  .btn { flex: 1; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2);
+         color: var(--text); font: inherit; font-weight: 600; cursor: pointer; }
+  .btn:hover { border-color: var(--accent); }
+  ul.list { list-style: none; margin: 0; padding: 0; max-height: 280px; overflow-y: auto; }
+  ul.list li { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  ul.list li:last-child { border-bottom: 0; }
+  .time { color: var(--muted); font-variant-numeric: tabular-nums; flex: none; }
+  .clip { justify-content: space-between; align-items: center; }
+  .clip a { color: var(--accent); text-decoration: none; font-weight: 600; overflow-wrap: anywhere; }
+  .tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); white-space: nowrap; }
+  .tag.prey { color: var(--danger); } .tag.clean { color: var(--ok); }
+  .empty { color: var(--muted); font-size: 14px; }
+  footer { text-align: center; padding: 0 16px 24px; font-size: 13px; }
+  footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Catflap Monitor</h1>
+  <div class="pills">
+    <span class="pill" id="pill-flap"><span class="dot"></span><span>Flap …</span></span>
+    <span class="pill" id="pill-det"><span class="dot"></span><span>Detection …</span></span>
+  </div>
+</header>
+
+<main>
+  <div class="stack">
+    <section class="card video">
+      <img src="/video_feed" alt="Live camera view">
+      <div class="video-bar"><span>Live camera</span><span id="params"></span></div>
+    </section>
+    <section class="card">
+      <h2>Recordings</h2>
+      <ul class="list" id="clips"><li class="empty">No recordings yet</li></ul>
+      <div class="video-bar" style="padding:10px 0 0;border:0" id="rec-info"></div>
+    </section>
+  </div>
+
+  <div class="stack">
+    <section class="card">
+      <h2>Operation mode</h2>
+      <div class="modes">
+        <button class="mode" data-mode="auto"><strong>Automatic</strong><span>Detection decides: clean cats get in, cats with prey stay out.</span></button>
+        <button class="mode" data-mode="open"><strong>Always open</strong><span>Flap stays unlocked, e.g. while the cats get used to it. Detection only logs.</span></button>
+        <button class="mode" data-mode="locked"><strong>Always locked</strong><span>Nobody gets in. Detection only logs.</span></button>
+      </div>
+      <div class="note" id="open-note" hidden>The flap is held open. Prey is <b>not</b> blocked in this mode.</div>
+    </section>
+
+    <section class="card">
+      <h2>Status</h2>
+      <div class="row"><span class="k">Flap</span><span class="v" id="s-flap">–</span></div>
+      <div class="row"><span class="k">Detection</span><span class="v" id="s-det">–</span></div>
+      <div class="row"><span class="k">Last decision</span><span class="v" id="s-dec">–</span></div>
+      <div class="row"><span class="k">Cats in view</span><span class="v" id="s-cats">–</span></div>
+      <div class="actions">
+        <button class="btn" id="btn-unlock">Unlock 30 s</button>
+        <button class="btn" id="btn-lock">Lock now</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Events</h2>
+      <ul class="list" id="events"><li class="empty">No events yet</li></ul>
+    </section>
+  </div>
+</main>
+<footer><a href="/apidocs" target="_blank">API documentation</a></footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function pill(el, cls, text) {
+  el.className = 'pill ' + cls;
+  el.lastElementChild.textContent = text;
+}
+
+async function refresh() {
+  try {
+    const s = await (await fetch('/api/status')).json();
+    const locked = s.is_locked_in;
+    pill($('pill-flap'), locked ? 'danger' : 'ok', locked ? 'Flap locked' : 'Flap open');
+    pill($('pill-det'), s.mode === 'active' ? 'accent' : '', s.mode === 'active' ? 'Detecting' : 'Idle');
+    $('s-flap').textContent = locked ? 'Locked' : 'Open';
+    $('s-det').textContent = s.mode === 'active' ? 'Running' : 'Idle (motion watch)';
+    $('s-dec').textContent = {GRANTED: 'Clean cat → open', DENIED: 'Prey → locked'}[s.decision] || '–';
+    $('s-cats').textContent = s.cats.length
+      ? s.cats.map(c => `#${c.id} ${c.state.replaceAll('_', ' ').toLowerCase()} (${c.history}/${s.params.history_length})`).join(', ')
+      : 'none';
+    if (s.params.history_length) $('params').textContent = `history ${s.params.history_length} · threshold ${s.params.prey_threshold}`;
+    document.querySelectorAll('.mode').forEach(b => b.classList.toggle('active', b.dataset.mode === s.override));
+    $('open-note').hidden = s.override !== 'open';
+    $('events').innerHTML = s.events.length
+      ? s.events.map(e => `<li><span class="time">${esc(e.time)}</span><span>${esc(e.text)}</span></li>`).join('')
+      : '<li class="empty">No events yet</li>';
+  } catch (e) { pill($('pill-flap'), 'warn', 'Offline'); }
+}
+
+async function refreshClips() {
+  try {
+    const r = await (await fetch('/api/recordings')).json();
+    $('clips').innerHTML = r.clips.length
+      ? r.clips.map(c => `<li class="clip"><a href="/recordings/${encodeURIComponent(c.name)}" download>${esc(c.label)}</a>
+          <span class="tag ${c.decision === 'prey' ? 'prey' : c.decision === 'clean' ? 'clean' : ''}">${esc(c.decision)} · ${esc(c.size)}</span></li>`).join('')
+      : '<li class="empty">No recordings yet</li>';
+    $('rec-info').textContent = r.enabled
+      ? `${r.count} clips · ${r.total} of ${r.limit} used` + (r.dropbox ? ` · Dropbox: ${r.dropbox}` : '')
+      : 'Recording is off';
+  } catch (e) {}
+}
+
+async function post(url, body) {
+  await fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: body ? JSON.stringify(body) : undefined});
+  refresh();
+}
+
+document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => post('/api/override', {mode: b.dataset.mode})));
+$('btn-unlock').addEventListener('click', () => post('/api/unlock'));
+$('btn-lock').addEventListener('click', () => post('/api/lock'));
+
+refresh(); refreshClips();
+setInterval(refresh, 1500);
+setInterval(refreshClips, 10000);
+</script>
+</body>
+</html>
